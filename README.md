@@ -11,7 +11,7 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 - zapewnia szybki dostęp do aktualnych i historycznych danych,
 - umożliwia filtrowanie wyników po dacie i walucie,
 - prezentuje trendy kursowe w formie wykresów,
-- pozwala eksportować dane do plików CSV/XLSX,
+- pozwala eksportować dane do plików CSV/XLSX, < ---- nie pamietam tego 
 - wspiera logowanie, autoryzację i personalizację danych,
 - działa w trybie offline jako aplikacja PWA.
 
@@ -20,9 +20,9 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 ## ⚙️ Zakres projektu
 
 ### 🧩 Wersja MVP
-- ✅ **Frontend** – HTML, CSS, JavaScript, Bootstrap  
-- ✅ **Backend** – Flask (Python)  
-- ✅ **Baza danych** – SQLite  
+- ✅ **Frontend** – HTML, CSS, JavaScript 
+- ✅ **Backend** – Firebase   
+- ✅ **Baza danych** – Firestore NoSQL 
 - ✅ **API NBP** – pobieranie danych o kursach walut FIAT  
 - ✅ **Logowanie i rejestracja** użytkowników  
 - ✅ **Autoryzacja** i obsługa sesji  
@@ -38,7 +38,7 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 - 💰 Integracja z API kryptowalut (CoinGecko)  
 - 📈 Dashboard analityczny (wskaźniki: średni, min, max, zmiana %)  
 - 🔔 Powiadomienia push / alerty walutowe  
-- 🧠 Udoskonalony UX/UI i testy automatyczne  
+- 🧠 Udoskonalony UX/UI i testy automatyczne  ( czy przy html css js mozna nazwac udoskonalonym? )
 
 ---
 
@@ -58,18 +58,9 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 
 Trójwarstwowa architektura aplikacji:
 1. **Frontend** – prezentacja danych (HTML/CSS/JS, Bootstrap)
-2. **Backend** – logika biznesowa (Flask)
-3. **Baza danych + API zewnętrzne** – SQLite + API NBP / CoinGecko  
-4. **Autoryzacja użytkowników** – Flask Sessions / Tokens  
-5. **Środowisko wdrożeniowe** – chmura lub serwer  
+2. **Backend** – Firebase <3 
+3. **Baza danych + API zewnętrzne** – Firestore NoSql  + API NBP / CoinGecko  
+4. **Autoryzacja użytkowników** – Firebase  
+5. **Środowisko wdrożeniowe** – AZURE/AWS 
 
-```plaintext
-Użytkownik 
-   ↓
-Frontend (HTML, CSS, JS)
-   ↓
-Backend (Flask, Python)
-   ↓
-Baza danych (SQLite)
-   ↘
-    API NBP / CoinGecko
+
