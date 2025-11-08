@@ -1,13 +1,12 @@
 TODO :
-assets, ikonki
-zmiana avatara ? 
-wiecej opcji w profilu - po co sie logowac ? moze bez logowania
-wykresy - bo sa brzydki
-Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute ) 
+- assets, ikonki
+- zmiana avatara ?  czy wywalamy? 
+- wiecej opcji w profilu - po co sie logowac ? moze bez logowania
+- wykresy - bo sa brzydki
+- Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute ) 
 
 BUGI :
 brak szczegolow po wejsciu w krypto
-
 
 
 
