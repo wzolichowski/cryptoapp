@@ -1,3 +1,20 @@
+TODO :
+assets, ikonki
+zmiana avatara ? 
+wiecej opcji w profilu - po co sie logowac ? moze bez logowania
+wykresy - bo sa brzydki
+Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute ) 
+
+BUGI :
+brak szczegolow po wejsciu w krypto
+
+
+
+
+
+
+
+
 # 💱 Kursy Walut – Aplikacja PWA
 
 Interaktywna aplikacja **Progressive Web App (PWA)** umożliwiająca przeglądanie **aktualnych i historycznych kursów walut oraz kryptowalut** w przyjaznym, responsywnym interfejsie.  
