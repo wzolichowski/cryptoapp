@@ -6,7 +6,8 @@ TODO :
 - Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute ) 
 
 BUGI :
-brak szczegolow po wejsciu w krypto
+- brak szczegolow po wejsciu w krypto
+- haslo zagwiazdkowane zanim wgl cos wpiszesz ( to nei sap )
 
 
 
