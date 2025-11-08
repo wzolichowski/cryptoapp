@@ -8,6 +8,7 @@ TODO :
 BUGI :
 - brak szczegolow po wejsciu w krypto
 - haslo zagwiazdkowane zanim wgl cos wpiszesz ( to nei sap )
+- ulubione nie dzialaja
 
 
 
