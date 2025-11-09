@@ -11,6 +11,8 @@ BUGI :
 - haslo zagwiazdkowane zanim wgl cos wpiszesz ( to nei sap )
 - ulubione nie dzialaja
 
+BACKLOGI:
+- na stronie glownej sa same waluty - podzielic na dwa, dodac tez krypto, usunac zakladke krypto, szczegoly powinny byc w kazdej walucie, nie tylko krypto
 
 
 
