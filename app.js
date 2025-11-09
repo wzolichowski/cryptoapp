@@ -481,7 +481,7 @@ function showLoginForm() {
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">Hasło</label>
-                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                    <input type="password" id="loginPassword" required placeholder="">
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
                     <i class="fas fa-sign-in-alt"></i>
@@ -514,19 +514,19 @@ function showRegisterForm() {
             <form onsubmit="handleRegister(event)">
                 <div class="form-group">
                     <label for="registerName">Imię i nazwisko</label>
-                    <input type="text" id="registerName" required placeholder="Jan Kowalski">
+                    <input type="text" id="registerName" required placeholder="Your Name">
                 </div>
                 <div class="form-group">
                     <label for="registerEmail">Email</label>
-                    <input type="email" id="registerEmail" required placeholder="twoj@email.com">
+                    <input type="email" id="registerEmail" required placeholder="youremail@email.com">
                 </div>
                 <div class="form-group">
                     <label for="registerPassword">Hasło</label>
-                    <input type="password" id="registerPassword" required placeholder="••••••••" minlength="6">
+                    <input type="password" id="registerPassword" required placeholder="" minlength="6">
                 </div>
                 <div class="form-group">
                     <label for="registerPasswordConfirm">Potwierdź hasło</label>
-                    <input type="password" id="registerPasswordConfirm" required placeholder="••••••••" minlength="6">
+                    <input type="password" id="registerPasswordConfirm" required placeholder="" minlength="6">
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
                     <i class="fas fa-user-plus"></i>
