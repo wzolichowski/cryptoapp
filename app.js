@@ -281,7 +281,7 @@ function updateCryptoTable() {
             <tr data-crypto="${crypto.id}" onclick="showCryptoDetails('${crypto.id}')" style="cursor: pointer;">
                 <td>
                     <div class="currency-name">
-                        <span style="font-size: 1.5rem;">${crypto.icon}</span>
+                        <span style="font-size: 1.5rem;">${crypto.symbol}</span>
                         <span>${crypto.name}</span>
                     </div>
                 </td>
