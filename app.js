@@ -89,6 +89,17 @@ function initNavigation() {
             btn.classList.add('active');
         });
     });
+    
+    // logo jako button do dashboardu
+    const logoBtn = document.querySelector('.logo');
+    if (logoBtn) {
+        logoBtn.style.cursor = 'pointer';
+        logoBtn.addEventListener('click', () => {
+            switchView('dashboard');
+            navButtons.forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-view="dashboard"]')?.classList.add('active');
+        });
+    }
 }
 
 // Przełączanie widoków 
