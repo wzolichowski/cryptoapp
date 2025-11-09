@@ -615,9 +615,36 @@ function showDetails(code) {
 }
 
 function showCryptoDetails(id) {
-    // TODO: dodać modal/nowy widok z detalami krypto (obecnie tylko toast)
-    showToast(`Szczegóły ${id}`, 'info');
+    const crypto = AppState.cryptos.find(c => c.id === id);
+    if (!crypto) return;
+    
+    // wypełniamy modal danymi
+    document.getElementById('modalCryptoName').textContent = crypto.name;
+    document.getElementById('modalCryptoIcon').textContent = crypto.icon;
+    document.getElementById('modalCryptoSymbol').textContent = crypto.symbol;
+    document.getElementById('modalCryptoPricePLN').textContent = formatCurrency(crypto.pricePLN);
+    document.getElementById('modalCryptoPriceUSD').textContent = `$${formatNumber(crypto.priceUSD, 2)}`;
+    
+    const changeElement = document.getElementById('modalCryptoChange');
+    const change = parseFloat(crypto.change24h);
+    changeElement.textContent = `${change > 0 ? '+' : ''}${change}%`;
+    changeElement.className = `detail-value stat-change ${change >= 0 ? 'positive' : 'negative'}`;
+    
+    // pokazujemy modal
+    document.getElementById('cryptoModal').style.display = 'flex';
 }
+
+function closeCryptoModal() {
+    document.getElementById('cryptoModal').style.display = 'none';
+}
+
+// zamknij modal po kliknieciu poza nim
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('cryptoModal');
+    if (e.target === modal) {
+        closeCryptoModal();
+    }
+});
 
 // Search i filtr
 function initSearchAndFilter() {

@@ -236,6 +236,39 @@
     <!-- Toast-->
     <div id="toast" class="toast"></div>
 
+    <!-- Modal szczegółów krypto -->
+    <div id="cryptoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalCryptoName">Bitcoin</h2>
+                <button class="modal-close" onclick="closeCryptoModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="crypto-detail-icon" id="modalCryptoIcon">₿</div>
+                <div class="crypto-detail-info">
+                    <div class="detail-row">
+                        <span class="detail-label">Symbol:</span>
+                        <span class="detail-value" id="modalCryptoSymbol">BTC</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Cena (PLN):</span>
+                        <span class="detail-value" id="modalCryptoPricePLN">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Cena (USD):</span>
+                        <span class="detail-value" id="modalCryptoPriceUSD">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Zmiana 24h:</span>
+                        <span class="detail-value" id="modalCryptoChange">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="app.js"></script>
     <script>
