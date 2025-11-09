@@ -646,6 +646,16 @@ window.addEventListener('click', (e) => {
     }
 });
 
+// zamknij modal po wciśnięciu ESC
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('cryptoModal');
+        if (modal.style.display === 'flex') {
+            closeCryptoModal();
+        }
+    }
+});
+
 // Search i filtr
 function initSearchAndFilter() {
     const searchInput = document.getElementById('searchInput');
