@@ -83,54 +83,7 @@
                     </div>
                 </div>
 
-                <!-- Stats Cards -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-blue">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3>USD/PLN</h3>
-                            <p class="stat-value" id="usdPlnRate">Ładowanie...</p>
-                            <span class="stat-change" id="usdChange">--</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-yellow">
-                            <i class="fas fa-euro-sign"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3>EUR/PLN</h3>
-                            <p class="stat-value" id="eurPlnRate">Ładowanie...</p>
-                            <span class="stat-change" id="eurChange">--</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-green">
-                            <i class="fas fa-pound-sign"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3>GBP/PLN</h3>
-                            <p class="stat-value" id="gbpPlnRate">Ładowanie...</p>
-                            <span class="stat-change" id="gbpChange">--</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-purple">
-                            <i class="fas fa-yen-sign"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3>CHF/PLN</h3>
-                            <p class="stat-value" id="chfPlnRate">Ładowanie...</p>
-                            <span class="stat-change" id="chfChange">--</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- table -->
+                <!-- Tabela walut -->
                 <div class="card">
                     <div class="card-header">
                         <h2>Aktualne kursy walut</h2>
@@ -148,11 +101,38 @@
                                 </tr>
                             </thead>
                             <tbody id="currencyTableBody">
-                                <!-- Spinner -->
                                 <tr>
                                     <td colspan="5" class="loading">
                                         <div class="spinner"></div>
                                         <p>Ładowanie danych...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabela kryptowalut -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Kryptowaluty</h2>
+                    </div>
+                    <div class="table-container">
+                        <table class="currency-table">
+                            <thead>
+                                <tr>
+                                    <th>Kryptowaluta</th>
+                                    <th>Symbol</th>
+                                    <th>Cena (PLN)</th>
+                                    <th>Zmiana 24h</th>
+                                    <th>Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cryptoTableBody">
+                                <tr>
+                                    <td colspan="5" class="loading">
+                                        <div class="spinner"></div>
+                                        <p>Ładowanie kryptowalut...</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -168,7 +148,6 @@
                         <h2>Kryptowaluty</h2>
                     </div>
                     <div class="crypto-grid" id="cryptoGrid">
-                        <!-- Spinner -->
                         <div class="loading">
                             <div class="spinner"></div>
                             <p>Ładowanie kryptowalut...</p>
@@ -191,9 +170,6 @@
                                 <option value="BTC">BTC/PLN</option>
                                 <option value="ETH">ETH/PLN</option>
                                 <option value="LTC">LTC/PLN</option>
-                            
-
-                                
                             </select>
                             <select id="chartPeriod" class="select">
                                 <option value="7">7 dni</option>
@@ -236,34 +212,19 @@
     <!-- Toast-->
     <div id="toast" class="toast"></div>
 
-    <!-- Modal szczegółów krypto -->
-    <div id="cryptoModal" class="modal">
+    <!-- Modal szczegółów -->
+    <div id="detailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalCryptoName">Bitcoin</h2>
-                <button class="modal-close" onclick="closeCryptoModal()">
+                <h2 id="modalItemName">Szczegóły</h2>
+                <button class="modal-close" onclick="closeDetailModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="crypto-detail-icon" id="modalCryptoIcon">₿</div>
-                <div class="crypto-detail-info">
-                    <div class="detail-row">
-                        <span class="detail-label">Symbol:</span>
-                        <span class="detail-value" id="modalCryptoSymbol">BTC</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Cena (PLN):</span>
-                        <span class="detail-value" id="modalCryptoPricePLN">-</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Cena (USD):</span>
-                        <span class="detail-value" id="modalCryptoPriceUSD">-</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Zmiana 24h:</span>
-                        <span class="detail-value" id="modalCryptoChange">-</span>
-                    </div>
+                <div class="crypto-detail-icon" id="modalItemIcon">?</div>
+                <div class="crypto-detail-info" id="modalDetailInfo">
+                    <!-- Szczegóły będą wstawiane dynamicznie -->
                 </div>
             </div>
         </div>

@@ -172,34 +172,14 @@ async function loadDashboardData() {
     
     AppState.lastUpdate = new Date().toLocaleString('pl-PL');
     
-    updateStatsCards();
     updateCurrencyTable();
     updateLastUpdateTime();
-}
-
-// Aktualizacja kafelków z głównymi walutami
-function updateStatsCards() {
-    const mainCurrencies = ['USD', 'EUR', 'GBP', 'CHF'];
     
-    mainCurrencies.forEach(code => {
-        const currency = AppState.currencies.find(c => c.code === code);
-        if (!currency) return;
-        
-        const rateElement = document.getElementById(`${code.toLowerCase()}PlnRate`);
-        const changeElement = document.getElementById(`${code.toLowerCase()}Change`);
-        
-        if (rateElement) {
-            rateElement.textContent = formatNumber(currency.rate, 4);
-        }
-        
-        if (changeElement) {
-            const change = parseFloat(currency.change);
-            changeElement.textContent = `${change > 0 ? '+' : ''}${change}%`;
-            changeElement.className = `stat-change ${change >= 0 ? 'positive' : 'negative'}`;
-        }
-    });
+    // ładujemy też krypto do dashboardu
+    loadDashboardCrypto();
 }
 
+// Render tabeli walut 
 // Render tabeli walut 
 function updateCurrencyTable() {
     const tbody = document.getElementById('currencyTableBody');
@@ -221,7 +201,7 @@ function updateCurrencyTable() {
         const changeIcon = change >= 0 ? '↑' : '↓';
         
         return `
-            <tr data-currency="${currency.code}">
+            <tr data-currency="${currency.code}" onclick="showDetails('${currency.code}')" style="cursor: pointer;">
                 <td>
                     <div class="currency-name">
                         <span style="font-size: 1.5rem;">${currency.flag}</span>
@@ -241,11 +221,85 @@ function updateCurrencyTable() {
                 </td>
                 <td>
                     <div class="action-btns">
-                        <button class="icon-btn" onclick="addToFavorites('${currency.code}')" title="Dodaj do ulubionych">
+                        <button class="icon-btn" onclick="event.stopPropagation(); addToFavorites('${currency.code}', 'currency')" title="Dodaj do ulubionych">
                             <i class="far fa-star"></i>
                         </button>
-                        <button class="icon-btn" onclick="showDetails('${currency.code}')" title="Szczegóły">
-                            <i class="fas fa-chart-line"></i>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Ładowanie krypto do dashboardu
+async function loadDashboardCrypto() {
+    const cryptoTableBody = document.getElementById('cryptoTableBody');
+    cryptoTableBody.innerHTML = '<tr><td colspan="5" class="loading"><div class="spinner"></div><p>Ładowanie...</p></td></tr>';
+    
+    const rates = await fetchCryptoRates();
+    
+    if (!rates) {
+        cryptoTableBody.innerHTML = '<tr><td colspan="5" class="loading"><p>Błąd ładowania danych</p></td></tr>';
+        return;
+    }
+    
+    AppState.cryptos = POPULAR_CRYPTOS.map(crypto => ({
+        ...crypto,
+        pricePLN: rates[crypto.id]?.pln || 0,
+        priceUSD: rates[crypto.id]?.usd || 0,
+        change24h: typeof rates[crypto.id]?.pln_24h_change !== 'undefined'
+            ? Number(rates[crypto.id].pln_24h_change.toFixed(2))
+            : (typeof rates[crypto.id]?.usd_24h_change !== 'undefined'
+                ? Number(rates[crypto.id].usd_24h_change.toFixed(2))
+                : getRandomChange()) // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - fallback
+    }));
+    
+    updateCryptoTable();
+}
+
+// Render tabeli krypto na dashboardzie
+function updateCryptoTable() {
+    const tbody = document.getElementById('cryptoTableBody');
+    
+    if (AppState.cryptos.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="loading">
+                    <p>Brak danych do wyświetlenia</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = AppState.cryptos.map(crypto => {
+        const change = parseFloat(crypto.change24h);
+        const changeClass = change >= 0 ? 'up' : 'down';
+        const changeIcon = change >= 0 ? '↑' : '↓';
+        
+        return `
+            <tr data-crypto="${crypto.id}" onclick="showCryptoDetails('${crypto.id}')" style="cursor: pointer;">
+                <td>
+                    <div class="currency-name">
+                        <span style="font-size: 1.5rem;">${crypto.icon}</span>
+                        <span>${crypto.name}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="currency-code">${crypto.symbol}</span>
+                </td>
+                <td>
+                    <span class="rate-value">${formatCurrency(crypto.pricePLN)}</span>
+                </td>
+                <td>
+                    <span class="change-badge ${changeClass}">
+                        ${changeIcon} ${Math.abs(change)}%
+                    </span>
+                </td>
+                <td>
+                    <div class="action-btns">
+                        <button class="icon-btn" onclick="event.stopPropagation(); addToFavorites('${crypto.id}', 'crypto')" title="Dodaj do ulubionych">
+                            <i class="far fa-star"></i>
                         </button>
                     </div>
                 </td>
@@ -514,11 +568,11 @@ function showRegisterForm() {
             <form onsubmit="handleRegister(event)">
                 <div class="form-group">
                     <label for="registerName">Imię i nazwisko</label>
-                    <input type="text" id="registerName" required placeholder="Your Name">
+                    <input type="text" id="registerName" required placeholder="Jan Kowalski">
                 </div>
                 <div class="form-group">
                     <label for="registerEmail">Email</label>
-                    <input type="email" id="registerEmail" required placeholder="youremail@email.com">
+                    <input type="email" id="registerEmail" required placeholder="twoj@email.com">
                 </div>
                 <div class="form-group">
                     <label for="registerPassword">Hasło</label>
@@ -602,56 +656,100 @@ function logout() {
 }
 
 // Proste akcje (ulubione, szczegóły)
-function addToFavorites(code) {
+function addToFavorites(code, type = 'currency') {
     // TODO: zapisz ulubione po stronie backendu a nie w localhost
-    showToast(`${code} dodano do ulubionych`, 'success');
+    const name = type === 'crypto' ? 
+        AppState.cryptos.find(c => c.id === code)?.name : 
+        AppState.currencies.find(c => c.code === code)?.name;
+    showToast(`${name || code} dodano do ulubionych`, 'success');
 }
 
 function showDetails(code) {
-    showToast(`Otwieranie szczegółów dla ${code}`, 'info');
-    // przełączamy widok na wykresy
-    // TODO: można przekazać parametr, żeby wykres od razu ładował dane dla wybranej waluty
-    document.querySelector('[data-view="charts"]').click();
+    const currency = AppState.currencies.find(c => c.code === code);
+    if (!currency) return;
+    
+    // wypełniamy modal danymi waluty
+    document.getElementById('modalItemName').textContent = currency.name;
+    document.getElementById('modalItemIcon').textContent = currency.flag;
+    
+    const change = parseFloat(currency.change);
+    const detailInfo = `
+        <div class="detail-row">
+            <span class="detail-label">Kod:</span>
+            <span class="detail-value">${currency.code}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Symbol:</span>
+            <span class="detail-value">${currency.symbol}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Kurs (${AppState.baseCurrency}):</span>
+            <span class="detail-value">${formatNumber(currency.rate, 4)}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Zmiana 24h:</span>
+            <span class="detail-value stat-change ${change >= 0 ? 'positive' : 'negative'}">${change > 0 ? '+' : ''}${change}%</span>
+        </div>
+    `;
+    
+    document.getElementById('modalDetailInfo').innerHTML = detailInfo;
+    
+    // pokazujemy modal
+    document.getElementById('detailModal').style.display = 'flex';
 }
 
 function showCryptoDetails(id) {
     const crypto = AppState.cryptos.find(c => c.id === id);
     if (!crypto) return;
     
-    // wypełniamy modal danymi
-    document.getElementById('modalCryptoName').textContent = crypto.name;
-    document.getElementById('modalCryptoIcon').textContent = crypto.icon;
-    document.getElementById('modalCryptoSymbol').textContent = crypto.symbol;
-    document.getElementById('modalCryptoPricePLN').textContent = formatCurrency(crypto.pricePLN);
-    document.getElementById('modalCryptoPriceUSD').textContent = `$${formatNumber(crypto.priceUSD, 2)}`;
+    // wypełniamy modal danymi krypto
+    document.getElementById('modalItemName').textContent = crypto.name;
+    document.getElementById('modalItemIcon').textContent = crypto.icon;
     
-    const changeElement = document.getElementById('modalCryptoChange');
     const change = parseFloat(crypto.change24h);
-    changeElement.textContent = `${change > 0 ? '+' : ''}${change}%`;
-    changeElement.className = `detail-value stat-change ${change >= 0 ? 'positive' : 'negative'}`;
+    const detailInfo = `
+        <div class="detail-row">
+            <span class="detail-label">Symbol:</span>
+            <span class="detail-value">${crypto.symbol}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Cena (PLN):</span>
+            <span class="detail-value">${formatCurrency(crypto.pricePLN)}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Cena (USD):</span>
+            <span class="detail-value">$${formatNumber(crypto.priceUSD, 2)}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Zmiana 24h:</span>
+            <span class="detail-value stat-change ${change >= 0 ? 'positive' : 'negative'}">${change > 0 ? '+' : ''}${change}%</span>
+        </div>
+    `;
+    
+    document.getElementById('modalDetailInfo').innerHTML = detailInfo;
     
     // pokazujemy modal
-    document.getElementById('cryptoModal').style.display = 'flex';
+    document.getElementById('detailModal').style.display = 'flex';
 }
 
-function closeCryptoModal() {
-    document.getElementById('cryptoModal').style.display = 'none';
+function closeDetailModal() {
+    document.getElementById('detailModal').style.display = 'none';
 }
 
 // zamknij modal po kliknieciu poza nim
 window.addEventListener('click', (e) => {
-    const modal = document.getElementById('cryptoModal');
+    const modal = document.getElementById('detailModal');
     if (e.target === modal) {
-        closeCryptoModal();
+        closeDetailModal();
     }
 });
 
 // zamknij modal po wciśnięciu ESC
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        const modal = document.getElementById('cryptoModal');
+        const modal = document.getElementById('detailModal');
         if (modal.style.display === 'flex') {
-            closeCryptoModal();
+            closeDetailModal();
         }
     }
 });
