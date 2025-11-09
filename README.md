@@ -4,7 +4,7 @@ TODO :
 - wiecej opcji w profilu - po co sie logowac ? moze bez logowania
 - wykresy - bo sa brzydki
 - Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute )
-- ikona ( logo ) przenosi na main site
+- ✅ikona ( logo ) przenosi na main site 
 
 BUGI :
 - brak szczegolow po wejsciu w krypto
