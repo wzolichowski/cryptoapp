@@ -5,7 +5,8 @@ const AppState = {
     currencies: [],
     cryptos: [],
     user: null,
-    lastUpdate: null
+    lastUpdate: null,
+    favorites: [] // { type: 'currency' | 'crypto', code: 'USD' | 'bitcoin' }
 };
 
 const API_CONFIG = {
@@ -73,6 +74,113 @@ function getRandomChange() {
     // DEMO: losowa zmiana 24h, używamy tylko jako fallback
     // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - podmianka na API 
     return (Math.random() * 4 - 2).toFixed(2);
+}
+
+// system ulubionych
+function loadFavoritesFromStorage() {
+    const saved = localStorage.getItem('favorites');
+    if (saved) {
+        AppState.favorites = JSON.parse(saved);
+    }
+}
+
+function saveFavoritesToStorage() {
+    localStorage.setItem('favorites', JSON.stringify(AppState.favorites));
+}
+
+function isFavorite(code, type) {
+    return AppState.favorites.some(f => f.code === code && f.type === type);
+}
+
+function toggleFavorite(code, type) {
+    const index = AppState.favorites.findIndex(f => f.code === code && f.type === type);
+    
+    if (index >= 0) {
+        // usun z ulubionych
+        AppState.favorites.splice(index, 1);
+        const name = type === 'crypto' ? 
+            AppState.cryptos.find(c => c.id === code)?.name : 
+            AppState.currencies.find(c => c.code === code)?.name;
+        showToast(`${name || code} usunięto z ulubionych`, 'info');
+    } else {
+        // dodaj do ulubionych (max 5)
+        if (AppState.favorites.length >= 5) {
+            showToast('Maksymalnie 5 ulubionych!', 'error');
+            return;
+        }
+        AppState.favorites.push({ code, type });
+        const name = type === 'crypto' ? 
+            AppState.cryptos.find(c => c.id === code)?.name : 
+            AppState.currencies.find(c => c.code === code)?.name;
+        showToast(`${name || code} dodano do ulubionych`, 'success');
+    }
+    
+    saveFavoritesToStorage();
+    updateCurrencyTable();
+    updateCryptoTable();
+    renderFavoritesCards();
+}
+
+function renderFavoritesCards() {
+    const favoritesSection = document.getElementById('favoritesSection');
+    const favoritesGrid = document.getElementById('favoritesGrid');
+    
+    if (AppState.favorites.length === 0) {
+        favoritesSection.style.display = 'none';
+        return;
+    }
+    
+    favoritesSection.style.display = 'block';
+    
+    const cards = AppState.favorites.map((fav, index) => {
+        if (fav.type === 'currency') {
+            const currency = AppState.currencies.find(c => c.code === fav.code);
+            if (!currency) return '';
+            
+            const change = parseFloat(currency.change);
+            const colors = ['blue', 'yellow', 'green', 'purple', 'blue'];
+            const color = colors[index % colors.length];
+            
+            return `
+                <div class="stat-card" onclick="showDetails('${currency.code}')" style="cursor: pointer;">
+                    <div class="stat-icon stat-icon-${color}">
+                        ${currency.flag}
+                    </div>
+                    <div class="stat-content">
+                        <h3>${currency.code}/PLN</h3>
+                        <p class="stat-value">${formatNumber(currency.rate, 4)}</p>
+                        <span class="stat-change ${change >= 0 ? 'positive' : 'negative'}">
+                            ${change > 0 ? '+' : ''}${change}%
+                        </span>
+                    </div>
+                </div>
+            `;
+        } else {
+            const crypto = AppState.cryptos.find(c => c.id === fav.code);
+            if (!crypto) return '';
+            
+            const change = parseFloat(crypto.change24h);
+            const colors = ['blue', 'yellow', 'green', 'purple', 'blue'];
+            const color = colors[index % colors.length];
+            
+            return `
+                <div class="stat-card" onclick="showCryptoDetails('${crypto.id}')" style="cursor: pointer;">
+                    <div class="stat-icon stat-icon-${color}">
+                        ${crypto.symbol}
+                    </div>
+                    <div class="stat-content">
+                        <h3>${crypto.symbol}</h3>
+                        <p class="stat-value">${formatCurrency(crypto.pricePLN)}</p>
+                        <span class="stat-change ${change >= 0 ? 'positive' : 'negative'}">
+                            ${change > 0 ? '+' : ''}${change}%
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+    
+    favoritesGrid.innerHTML = cards;
 }
 
 // header button
@@ -180,7 +288,6 @@ async function loadDashboardData() {
 }
 
 // Render tabeli walut 
-// Render tabeli walut 
 function updateCurrencyTable() {
     const tbody = document.getElementById('currencyTableBody');
     
@@ -199,6 +306,7 @@ function updateCurrencyTable() {
         const change = parseFloat(currency.change);
         const changeClass = change >= 0 ? 'up' : 'down';
         const changeIcon = change >= 0 ? '↑' : '↓';
+        const isFav = isFavorite(currency.code, 'currency');
         
         return `
             <tr data-currency="${currency.code}" onclick="showDetails('${currency.code}')" style="cursor: pointer;">
@@ -221,8 +329,8 @@ function updateCurrencyTable() {
                 </td>
                 <td>
                     <div class="action-btns">
-                        <button class="icon-btn" onclick="event.stopPropagation(); addToFavorites('${currency.code}', 'currency')" title="Dodaj do ulubionych">
-                            <i class="far fa-star"></i>
+                        <button class="icon-btn ${isFav ? 'favorite-active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${currency.code}', 'currency')" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}">
+                            <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
                         </button>
                     </div>
                 </td>
@@ -255,6 +363,7 @@ async function loadDashboardCrypto() {
     }));
     
     updateCryptoTable();
+    renderFavoritesCards();
 }
 
 // Render tabeli krypto na dashboardzie
@@ -276,12 +385,13 @@ function updateCryptoTable() {
         const change = parseFloat(crypto.change24h);
         const changeClass = change >= 0 ? 'up' : 'down';
         const changeIcon = change >= 0 ? '↑' : '↓';
+        const isFav = isFavorite(crypto.id, 'crypto');
         
         return `
             <tr data-crypto="${crypto.id}" onclick="showCryptoDetails('${crypto.id}')" style="cursor: pointer;">
                 <td>
                     <div class="currency-name">
-                        <span style="font-size: 1.5rem;">${crypto.symbol}</span>
+                        <span style="font-size: 1.5rem;">${crypto.icon}</span>
                         <span>${crypto.name}</span>
                     </div>
                 </td>
@@ -298,8 +408,8 @@ function updateCryptoTable() {
                 </td>
                 <td>
                     <div class="action-btns">
-                        <button class="icon-btn" onclick="event.stopPropagation(); addToFavorites('${crypto.id}', 'crypto')" title="Dodaj do ulubionych">
-                            <i class="far fa-star"></i>
+                        <button class="icon-btn ${isFav ? 'favorite-active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${crypto.id}', 'crypto')" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}">
+                            <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
                         </button>
                     </div>
                 </td>
@@ -655,15 +765,6 @@ function logout() {
     renderProfile();
 }
 
-// Proste akcje (ulubione, szczegóły)
-function addToFavorites(code, type = 'currency') {
-    // TODO: zapisz ulubione po stronie backendu a nie w localhost
-    const name = type === 'crypto' ? 
-        AppState.cryptos.find(c => c.id === code)?.name : 
-        AppState.currencies.find(c => c.code === code)?.name;
-    showToast(`${name || code} dodano do ulubionych`, 'success');
-}
-
 function showDetails(code) {
     const currency = AppState.currencies.find(c => c.code === code);
     if (!currency) return;
@@ -704,7 +805,7 @@ function showCryptoDetails(id) {
     
     // wypełniamy modal danymi krypto
     document.getElementById('modalItemName').textContent = crypto.name;
-    document.getElementById('modalItemIcon').textContent = crypto.icon;
+    document.getElementById('modalItemIcon').textContent = crypto.symbol;
     
     const change = parseFloat(crypto.change24h);
     const detailInfo = `
@@ -840,6 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Inicjalizacja aplikacji Kursy Walut...');
     
     loadUserFromStorage();
+    loadFavoritesFromStorage();
     initNavigation();
     initSearchAndFilter();
     checkOnlineStatus();

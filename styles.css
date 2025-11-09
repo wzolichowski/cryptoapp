@@ -809,6 +809,14 @@ body {
     color: var(--text-primary);
 }
 
+.icon-btn.favorite-active {
+    color: #f59e0b;
+}
+
+.icon-btn.favorite-active:hover {
+    color: #d97706;
+}
+
 /* =====================
    Responsive Design
    ===================== */
