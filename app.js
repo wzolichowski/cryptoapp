@@ -103,12 +103,8 @@ function toggleFavorite(code, type) {
             AppState.currencies.find(c => c.code === code)?.name;
         showToast(`${name || code} usunięto z ulubionych`, 'info');
     } else {
-        // dodaj do ulubionych (max 5)
-        if (AppState.favorites.length >= 5) {
-            showToast('Maksymalnie 5 ulubionych!', 'error');
-            return;
-        }
-        AppState.favorites.push({ code, type });
+        // dodaj do ulubionych (bez limitu)
+        AppState.favorites.unshift({ code, type });
         const name = type === 'crypto' ? 
             AppState.cryptos.find(c => c.id === code)?.name : 
             AppState.currencies.find(c => c.code === code)?.name;
@@ -138,7 +134,7 @@ function renderFavoritesCards() {
             if (!currency) return '';
             
             const change = parseFloat(currency.change);
-            const colors = ['blue', 'yellow', 'green', 'purple', 'blue'];
+            const colors = ['blue', 'yellow', 'green', 'purple'];
             const color = colors[index % colors.length];
             
             return `
@@ -160,7 +156,7 @@ function renderFavoritesCards() {
             if (!crypto) return '';
             
             const change = parseFloat(crypto.change24h);
-            const colors = ['blue', 'yellow', 'green', 'purple', 'blue'];
+            const colors = ['blue', 'yellow', 'green', 'purple'];
             const color = colors[index % colors.length];
             
             return `
@@ -182,7 +178,6 @@ function renderFavoritesCards() {
     
     favoritesGrid.innerHTML = cards;
 }
-
 // header button
 function initNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
@@ -302,7 +297,17 @@ function updateCurrencyTable() {
         return;
     }
     
-    tbody.innerHTML = AppState.currencies.map(currency => {
+    // sortowanie - ulubione najpierw
+    const sortedCurrencies = [...AppState.currencies].sort((a, b) => {
+        const aIsFav = isFavorite(a.code, 'currency');
+        const bIsFav = isFavorite(b.code, 'currency');
+        
+        if (aIsFav && !bIsFav) return -1;
+        if (!aIsFav && bIsFav) return 1;
+        return 0;
+    });
+    
+    tbody.innerHTML = sortedCurrencies.map(currency => {
         const change = parseFloat(currency.change);
         const changeClass = change >= 0 ? 'up' : 'down';
         const changeIcon = change >= 0 ? '↑' : '↓';
@@ -367,6 +372,7 @@ async function loadDashboardCrypto() {
 }
 
 // Render tabeli krypto na dashboardzie
+// Render tabeli krypto na dashboardzie
 function updateCryptoTable() {
     const tbody = document.getElementById('cryptoTableBody');
     
@@ -381,7 +387,17 @@ function updateCryptoTable() {
         return;
     }
     
-    tbody.innerHTML = AppState.cryptos.map(crypto => {
+    // sortowanie - ulubione najpierw
+    const sortedCryptos = [...AppState.cryptos].sort((a, b) => {
+        const aIsFav = isFavorite(a.id, 'crypto');
+        const bIsFav = isFavorite(b.id, 'crypto');
+        
+        if (aIsFav && !bIsFav) return -1;
+        if (!aIsFav && bIsFav) return 1;
+        return 0;
+    });
+    
+    tbody.innerHTML = sortedCryptos.map(crypto => {
         const change = parseFloat(crypto.change24h);
         const changeClass = change >= 0 ? 'up' : 'down';
         const changeIcon = change >= 0 ? '↑' : '↓';
