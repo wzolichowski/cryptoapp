@@ -7,7 +7,7 @@ TODO : ( jak pomysly macie )
 - ✅ikona ( logo ) przenosi na main site 
 
 BUGI : ( zglaszajcie jak sa )
-- ulubione powinny wychodzic na poczatek listy - i po odznaczeniu wracac ( poki co nie dziala nic )
+- ✅ulubione powinny wychodzic na poczatek listy - i po odznaczeniu wracac ( poki co nie dziala nic )
 - ✅brak szczegolow po wejsciu w krypto
 - ✅haslo zagwiazdkowane zanim wgl cos wpiszesz ( to nei sap )
 - ✅ulubione nie dzialaja
