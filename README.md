@@ -1,4 +1,4 @@
-TODO :
+TODO : ( jak pomysly macie )
 - assets, ikonki
 - zmiana avatara ?  czy wywalamy? 
 - wiecej opcji w profilu - po co sie logowac ? moze bez logowania
@@ -6,13 +6,13 @@ TODO :
 - Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute )
 - ✅ikona ( logo ) przenosi na main site 
 
-BUGI :
-- ulubione powinny wychodzic na poczatek listy - i po odznaczeniu wracac ( poki co nie dziala nic )
+BUGI : ( zglaszajcie jak sa )
+- ✅ulubione powinny wychodzic na poczatek listy - i po odznaczeniu wracac ( poki co nie dziala nic )
 - ✅brak szczegolow po wejsciu w krypto
 - ✅haslo zagwiazdkowane zanim wgl cos wpiszesz ( to nei sap )
 - ✅ulubione nie dzialaja
 
-BACKLOGI:
+BACKLOGI: ( nowa funkcjonalnosc - ktora uwazacie ze powinna sie znalezc w aplikacji )
 - ✅na stronie glownej sa same waluty - podzielic na dwa, dodac tez krypto, usunac zakladke krypto, szczegoly powinny byc w kazdej walucie, nie tylko krypto
 
 
