@@ -246,7 +246,6 @@ async function fetchExchangeRates(base = 'PLN') {
             return null;
         }
 
-        // zamieniamy tablicę na mapę: { USD: 4.12, EUR: 4.30, ... }
         const ratesByCode = {};
         for (const rate of rawRates) {
             if (rate.code && typeof rate.mid === "number") {
@@ -301,7 +300,6 @@ async function loadDashboardData() {
             console.error("NBP: niepoprawna struktura danych", data);
         }
 
-        // Budujemy mapę: { USD: 4.12, EUR: 4.30, ... }
         const ratesByCode = {};
         if (Array.isArray(rawRates)) {
             for (const rate of rawRates) {
@@ -314,7 +312,6 @@ async function loadDashboardData() {
         AppState.currencies = POPULAR_CURRENCIES.map(curr => ({
             ...curr,
             rate: ratesByCode[curr.code] ?? 0,
-            // NBP nie daje 24h change – zamiast fejka możesz dać 0 lub zostawić null
             change: 0
         }));
 
@@ -419,34 +416,8 @@ function updateCurrencyTable() {
     }).join('');
 }
 
-// Ładowanie krypto do dashboardu
-async function loadDashboardCrypto() {
-    const cryptoTableBody = document.getElementById('cryptoTableBody');
-    cryptoTableBody.innerHTML = '<tr><td colspan="5" class="loading"><div class="spinner"></div><p>Ładowanie...</p></td></tr>';
-    
-    const rates = await fetchCryptoRates();
-    
-    if (!rates) {
-        cryptoTableBody.innerHTML = '<tr><td colspan="5" class="loading"><p>Błąd ładowania danych</p></td></tr>';
-        return;
-    }
-    
-    AppState.cryptos = POPULAR_CRYPTOS.map(crypto => ({
-        ...crypto,
-        pricePLN: rates[crypto.id]?.pln || 0,
-        priceUSD: rates[crypto.id]?.usd || 0,
-        change24h: typeof rates[crypto.id]?.pln_24h_change !== 'undefined'
-            ? Number(rates[crypto.id].pln_24h_change.toFixed(2))
-            : (typeof rates[crypto.id]?.usd_24h_change !== 'undefined'
-                ? Number(rates[crypto.id].usd_24h_change.toFixed(2))
-                : getRandomChange()) // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - fallback
-    }));
-    
-    updateCryptoTable();
-    renderFavoritesCards();
-}
 
-// Render tabeli krypto na dashboardzie
+
 // Render tabeli krypto na dashboardzie
 function updateCryptoTable() {
     const tbody = document.getElementById('cryptoTableBody');
