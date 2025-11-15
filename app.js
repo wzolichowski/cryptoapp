@@ -9,6 +9,9 @@ const AppState = {
     favorites: [] // { type: 'currency' | 'crypto', code: 'USD' | 'bitcoin' }
 };
 
+const FIREBASE_API_URL =
+  "https://us-central1-financial-crypto-dashboard.cloudfunctions.net/getLatestRates";
+
 const API_CONFIG = {
     exchangeRate: 'https://api.exchangerate-api.com/v4/latest/',
     crypto: 'https://api.coingecko.com/api/v3/simple/price',
@@ -217,69 +220,138 @@ function switchView(viewName) {
         AppState.currentView = viewName;
         
         // ładujemy dane 
-        if (viewName === 'crypto' && AppState.cryptos.length === 0) {
+        if (viewName === 'crypto') {
             loadCryptoData();
         } else if (viewName === 'charts') {
             loadChartData();
         } else if (viewName === 'profile') {
-            renderProfile();
-        }
+        renderProfile();
+}
     }
 }
 
 // Fetch kursów walut (publiczne API)
 async function fetchExchangeRates(base = 'PLN') {
     try {
-        const response = await fetch(`${API_CONFIG.exchangeRate}${base}`);
-        if (!response.ok) throw new Error('Błąd pobierania danych');
-        
+        const response = await fetch(FIREBASE_API_URL);
+        if (!response.ok) {
+            throw new Error("Błąd komunikacji z backendem (NBP)");
+        }
+
         const data = await response.json();
-        return data.rates;
-    } catch (error) {
-        console.error('Error fetching exchange rates:', error);
-        showToast('Błąd pobierania kursów walut', 'error');
+        const rawRates = data?.nbp?.raw?.[0]?.rates;
+
+        if (!Array.isArray(rawRates)) {
+            console.error("NBP: brak poprawnej tablicy rates w odpowiedzi", data);
+            return null;
+        }
+
+        const ratesByCode = {};
+        for (const rate of rawRates) {
+            if (rate.code && typeof rate.mid === "number") {
+                ratesByCode[rate.code] = rate.mid;
+            }
+        }
+
+        return ratesByCode;
+    } catch (e) {
+        console.error("NBP fetch error:", e);
+        showToast("Błąd pobierania kursów NBP (backend)", "error");
         return null;
     }
 }
 
 // Fetch cen krypto z CoinGecko
 async function fetchCryptoRates() {
-    try {
-        const ids = POPULAR_CRYPTOS.map(c => c.id).join(',');
-        const response = await fetch(
-            `${API_CONFIG.crypto}?ids=${ids}&vs_currencies=pln,usd&include_24hr_change=true`
-        );
-        
-        if (!response.ok) throw new Error('Błąd pobierania danych krypto');
-        
+   try {
+        const response = await fetch(FIREBASE_API_URL);
+        if (!response.ok) {
+            throw new Error("Błąd komunikacji z backendem");
+        }
+
         const data = await response.json();
-        return data;
+        const prices = data?.coingecko?.prices;
+
+        if (!prices) {
+            throw new Error("Brak danych krypto w odpowiedzi serwera");
+        }
+
+        return prices;
     } catch (error) {
-        console.error('Error fetching crypto rates:', error);
-        showToast('Błąd pobierania kursów kryptowalut', 'error');
+        console.error("Error fetching crypto rates from backend:", error);
+        showToast("Błąd pobierania kursów krypto (backend)", "error");
         return null;
     }
 }
 
-// Ładowanie danych do dashboardu
 async function loadDashboardData() {
-    const rates = await fetchExchangeRates(AppState.baseCurrency);
-    
-    if (!rates) return;
-    
-    AppState.currencies = POPULAR_CURRENCIES.map(curr => ({
-        ...curr,
-        rate: rates[curr.code] || 0,
-        change: getRandomChange() // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - zastąpić realnym 24h change
-    }));
-    
-    AppState.lastUpdate = new Date().toLocaleString('pl-PL');
-    
-    updateCurrencyTable();
-    updateLastUpdateTime();
-    
-    // ładujemy też krypto do dashboardu
-    loadDashboardCrypto();
+    try {
+        // Jeden request do backendu Firebase
+        const response = await fetch(FIREBASE_API_URL);
+        if (!response.ok) {
+            throw new Error("Błąd komunikacji z backendem");
+        }
+
+        const data = await response.json();
+
+        // ==== NBP – FIAT ====
+        const rawRates = data?.nbp?.raw?.[0]?.rates;
+        if (!Array.isArray(rawRates)) {
+            console.error("NBP: niepoprawna struktura danych", data);
+        }
+
+        const ratesByCode = {};
+        if (Array.isArray(rawRates)) {
+            for (const rate of rawRates) {
+                if (rate.code && typeof rate.mid === "number") {
+                    ratesByCode[rate.code] = rate.mid;
+                }
+            }
+        }
+
+        AppState.currencies = POPULAR_CURRENCIES.map(curr => ({
+            ...curr,
+            rate: ratesByCode[curr.code] ?? 0,
+            change: 0
+        }));
+
+        // ==== CRYPTO – CoinGecko ====
+        const prices = data?.coingecko?.prices || {};
+
+        AppState.cryptos = POPULAR_CRYPTOS.map(crypto => {
+            const p = prices[crypto.id] || {};
+            const pln = typeof p.pln === "number" ? p.pln : 0;
+            const usd = typeof p.usd === "number" ? p.usd : 0;
+
+            let change24h = null;
+            if (typeof p.pln_24h_change === "number") {
+                change24h = Number(p.pln_24h_change.toFixed(2));
+            } else if (typeof p.usd_24h_change === "number") {
+                change24h = Number(p.usd_24h_change.toFixed(2));
+            } else {
+                change24h = 0; // brak danych -> 0 zamiast losowania
+            }
+
+            return {
+                ...crypto,
+                pricePLN: pln,
+                priceUSD: usd,
+                change24h
+            };
+        });
+
+        // ==== reszta stanu + UI ====
+        AppState.lastUpdate = new Date().toLocaleString("pl-PL");
+
+        updateCurrencyTable();
+        updateCryptoTable();
+        renderFavoritesCards();
+        updateLastUpdateTime();
+
+    } catch (error) {
+        console.error("Błąd w loadDashboardData:", error);
+        showToast("Błąd ładowania danych z backendu", "error");
+    }
 }
 
 // Render tabeli walut 
@@ -344,34 +416,8 @@ function updateCurrencyTable() {
     }).join('');
 }
 
-// Ładowanie krypto do dashboardu
-async function loadDashboardCrypto() {
-    const cryptoTableBody = document.getElementById('cryptoTableBody');
-    cryptoTableBody.innerHTML = '<tr><td colspan="5" class="loading"><div class="spinner"></div><p>Ładowanie...</p></td></tr>';
-    
-    const rates = await fetchCryptoRates();
-    
-    if (!rates) {
-        cryptoTableBody.innerHTML = '<tr><td colspan="5" class="loading"><p>Błąd ładowania danych</p></td></tr>';
-        return;
-    }
-    
-    AppState.cryptos = POPULAR_CRYPTOS.map(crypto => ({
-        ...crypto,
-        pricePLN: rates[crypto.id]?.pln || 0,
-        priceUSD: rates[crypto.id]?.usd || 0,
-        change24h: typeof rates[crypto.id]?.pln_24h_change !== 'undefined'
-            ? Number(rates[crypto.id].pln_24h_change.toFixed(2))
-            : (typeof rates[crypto.id]?.usd_24h_change !== 'undefined'
-                ? Number(rates[crypto.id].usd_24h_change.toFixed(2))
-                : getRandomChange()) // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - fallback
-    }));
-    
-    updateCryptoTable();
-    renderFavoritesCards();
-}
 
-// Render tabeli krypto na dashboardzie
+
 // Render tabeli krypto na dashboardzie
 function updateCryptoTable() {
     const tbody = document.getElementById('cryptoTableBody');
