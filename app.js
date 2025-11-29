@@ -287,6 +287,13 @@ async function fetchCryptoRates() {
 
 async function loadDashboardData() {
     try {
+        // Pokaż wskaźnik ładowania
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Odświeżanie...';
+            refreshBtn.disabled = true;
+        }
+
         // Jeden request do backendu Firebase
         const response = await fetch(FIREBASE_API_URL);
         if (!response.ok) {
@@ -357,9 +364,23 @@ async function loadDashboardData() {
         renderFavoritesCards();
         updateLastUpdateTime();
 
+        // Przywróć przycisk odświeżania
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Odśwież';
+            refreshBtn.disabled = false;
+        }
+
     } catch (error) {
         console.error("Błąd w loadDashboardData:", error);
         showToast("Błąd ładowania danych z backendu", "error");
+
+        // Przywróć przycisk odświeżania również przy błędzie
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Odśwież';
+            refreshBtn.disabled = false;
+        }
     }
 }
 
@@ -1191,20 +1212,25 @@ function loadUserFromStorage() {
 // Start aplikacji po załadowaniu DOM
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Inicjalizacja aplikacji Kursy Walut...');
-    
+
     loadUserFromStorage();
     loadFavoritesFromStorage();
     initNavigation();
     initSearchAndFilter();
     checkOnlineStatus();
     loadDashboardData();
-    
-    // Auto refresh co 5 minut
+
+    // Auto refresh co 1 minutę
     setInterval(() => {
         if (AppState.currentView === 'dashboard') {
+            console.log('🔄 Odświeżanie danych...');
             loadDashboardData();
         }
-    }, 5 * 60 * 1000);
-    
-    console.log('✅ Aplikacja gotowa!');
+        if (AppState.currentView === 'crypto') {
+            console.log('🔄 Odświeżanie krypto...');
+            loadCryptoData();
+        }
+    }, 60 * 1000); // 60 sekund = 1 minuta
+
+    console.log('✅ Aplikacja gotowa! Auto-odświeżanie: co 1 minutę');
 });
