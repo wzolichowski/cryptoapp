@@ -35,10 +35,6 @@
                             <i class="fab fa-bitcoin"></i>
                             <span>Krypto</span>
                         </button>
-                        <button class="nav-btn" data-view="charts">
-                            <i class="fas fa-chart-area"></i>
-                            <span>Wykresy</span>
-                        </button>
                         <button class="nav-btn" data-view="profile">
                             <i class="fas fa-user"></i>
                             <span>Profil</span>
@@ -156,34 +152,6 @@
                                 <div class="spinner"></div>
                                 <p>Ładowanie kryptowalut...</p>
                             </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Charts View -->
-                <section id="charts" class="view">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>Wykres kursów</h2>
-                            <div class="chart-controls">
-                                <select id="chartCurrency" class="select">
-                                    <option value="USD">USD/PLN</option>
-                                    <option value="EUR">EUR/PLN</option>
-                                    <option value="GBP">GBP/PLN</option>
-                                    <option value="CHF">CHF/PLN</option>
-                                    <option value="BTC">BTC/PLN</option>
-                                    <option value="ETH">ETH/PLN</option>
-                                    <option value="LTC">LTC/PLN</option>
-                                </select>
-                                <select id="chartPeriod" class="select">
-                                    <option value="7">7 dni</option>
-                                    <option value="30">30 dni</option>
-                                    <option value="90">90 dni</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="currencyChart"></canvas>
                         </div>
                     </div>
                 </section>

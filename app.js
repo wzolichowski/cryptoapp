@@ -222,11 +222,9 @@ function switchView(viewName) {
         // ładujemy dane 
         if (viewName === 'crypto') {
             loadCryptoData();
-        } else if (viewName === 'charts') {
-            loadChartData();
         } else if (viewName === 'profile') {
-        renderProfile();
-}
+            renderProfile();
+        }
     }
 }
 
@@ -540,113 +538,6 @@ function renderCryptoGrid() {
             </div>
         `;
     }).join('');
-}
-
-// Wykresy (mockowane dane demo)
-function loadChartData() {
-    const canvas = document.getElementById('currencyChart');
-    const ctx = canvas.getContext('2d');
-    
-    // Clear previous chart
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Generate mock historical data
-    // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - podmienić na rzeczywiste dane z API 
-    const days = 7;
-    const labels = [];
-    const data = [];
-    const baseRate = 4.0;
-    
-    for (let i = days; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        labels.push(date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }));
-        data.push(baseRate + (Math.random() * 0.2 - 0.1));
-    }
-    
-    drawChart(ctx, canvas, labels, data);
-    
-    // Reaktywacja kkontrolek konfiguracyjnych
-    document.getElementById('chartCurrency')?.addEventListener('change', loadChartData);
-    document.getElementById('chartPeriod')?.addEventListener('change', loadChartData);
-}
-
-// canvas tworzenie wykresu
-function drawChart(ctx, canvas, labels, data) {
-    const padding = 40;
-    const width = canvas.width - 2 * padding;
-    const height = canvas.height - 2 * padding;
-    
-    // rozmiar canvas ( wiekszy ) 
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 400;
-    
-    const maxValue = Math.max(...data);
-    const minValue = Math.min(...data);
-    const range = maxValue - minValue || 1; // guard przed 0 
-    
-    // Oś i siatka graph
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, canvas.height - padding);
-    ctx.lineTo(canvas.width - padding, canvas.height - padding);
-    ctx.stroke();
-    
-    ctx.strokeStyle = '#f1f5f9';
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 5; i++) {
-        const y = padding + (height / 5) * i;
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(canvas.width - padding, y);
-        ctx.stroke();
-    }
-    
-    // Linia wartości grafu
-    ctx.strokeStyle = '#1e40af';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    
-    data.forEach((value, index) => {
-        const x = padding + (width / (data.length - 1)) * index;
-        const y = canvas.height - padding - ((value - minValue) / range) * height;
-        
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
-    
-    ctx.stroke();
-    
-    // Punkty na grafie 
-    ctx.fillStyle = '#1e40af';
-    data.forEach((value, index) => {
-        const x = padding + (width / (data.length - 1)) * index;
-        const y = canvas.height - padding - ((value - minValue) / range) * height;
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    
-    // Opisy osi grafu
-    ctx.fillStyle = '#64748b';
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'center';
-    
-    labels.forEach((label, index) => {
-        const x = padding + (width / (data.length - 1)) * index;
-        ctx.fillText(label, x, canvas.height - padding + 20);
-    });
-    
-    // Wartości po lewej osi
-    ctx.textAlign = 'right';
-    for (let i = 0; i <= 5; i++) {
-        const value = minValue + (range / 5) * (5 - i);
-        const y = padding + (height / 5) * i;
-        ctx.fillText(formatNumber(value, 2), padding - 10, y + 5);
-    }
 }
 
 // Profil użytkownika i autoryzacja (demo lokalne)
