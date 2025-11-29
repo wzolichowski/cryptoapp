@@ -741,27 +741,63 @@ function generateMockHistoricalData(currentValue, days) {
     const labels = [];
     const now = new Date();
 
-    // Generujemy dane wstecz od dzisiaj
-    for (let i = days - 1; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
+    // Generujemy losowy trend - cena mogła rosnąć lub spadać
+    // Dla przykładu: -15% do +15% zmiany w całym okresie
+    const totalChangePercent = (Math.random() * 30 - 15); // od -15% do +15%
+    const startValue = currentValue / (1 + totalChangePercent / 100);
 
-        // Formatowanie daty
-        if (days <= 7) {
-            // Dla krótkiego okresu: pokazuj godziny
-            labels.push(date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }));
-        } else if (days <= 90) {
-            // Dla średniego okresu: pokazuj dni
-            labels.push(date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }));
-        } else {
-            // Dla długiego okresu: pokazuj miesiące
-            labels.push(date.toLocaleDateString('pl-PL', { month: 'short', year: '2-digit' }));
+    // Dla 1D generujemy dane co godzinę (24 punkty)
+    if (days === 1) {
+        for (let i = 23; i >= 0; i--) {
+            const date = new Date(now);
+            date.setHours(date.getHours() - i);
+            labels.push(date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }));
+
+            // Progress od 0 do 1 przez cały dzień
+            const progress = (23 - i) / 23;
+
+            // Interpolacja między wartością początkową a końcową z małym szumem
+            const baseValue = startValue + (currentValue - startValue) * progress;
+            const noise = baseValue * 0.008 * (Math.random() - 0.5); // 0.8% szum
+            const value = baseValue + noise;
+
+            data.push(parseFloat(value.toFixed(4)));
         }
+    } else {
+        // Dla dłuższych okresów generujemy dane dziennie
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date(now);
+            date.setDate(date.getDate() - i);
 
-        // Generujemy wartość z małą losową zmianą
-        const variance = currentValue * 0.02; // 2% wariancja
-        const value = currentValue + (Math.random() - 0.5) * variance;
-        data.push(parseFloat(value.toFixed(4)));
+            // Formatowanie daty
+            if (days <= 7) {
+                labels.push(date.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric' }));
+            } else if (days <= 90) {
+                labels.push(date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }));
+            } else {
+                labels.push(date.toLocaleDateString('pl-PL', { month: 'short', year: '2-digit' }));
+            }
+
+            // Progress od 0 do 1 przez cały okres
+            const progress = (days - 1 - i) / (days - 1);
+
+            // Trend + losowe wahania (random walk)
+            const trendValue = startValue + (currentValue - startValue) * progress;
+
+            // Dodaj większe wahania dla dłuższych okresów
+            const volatility = days <= 7 ? 0.02 : (days <= 30 ? 0.03 : 0.04);
+            const noise = trendValue * volatility * (Math.random() - 0.5);
+
+            // Dodaj element "random walk" - każdy dzień może zmienić się względem poprzedniego
+            let value = trendValue + noise;
+
+            // Dla większego realizmu - czasem większe ruchy
+            if (Math.random() < 0.15) { // 15% szans na większy ruch
+                value += trendValue * (Math.random() * 0.06 - 0.03); // -3% do +3%
+            }
+
+            data.push(parseFloat(value.toFixed(4)));
+        }
     }
 
     return { labels, data };
@@ -780,12 +816,24 @@ function renderModalChart(labels, data, itemName) {
     // Określ czy wartości rosną czy maleją (dla koloru)
     const isPositive = data[data.length - 1] >= data[0];
     const lineColor = isPositive ? '#10b981' : '#ef4444';
-    const gradientColor = isPositive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+    const gradientColor = isPositive ?
+        'rgba(16, 185, 129, 0.15)' :
+        'rgba(239, 68, 68, 0.15)';
+    const gradientColorDeep = isPositive ?
+        'rgba(16, 185, 129, 0.4)' :
+        'rgba(239, 68, 68, 0.4)';
 
-    // Gradient pod wykresem
-    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-    gradient.addColorStop(0, gradientColor);
+    // Gradient pod wykresem - od intensywnego do przezroczystego
+    const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+    gradient.addColorStop(0, gradientColorDeep);
+    gradient.addColorStop(0.5, gradientColor);
     gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    // Oblicz min i max dla lepszego skalowania
+    const minValue = Math.min(...data);
+    const maxValue = Math.max(...data);
+    const range = maxValue - minValue;
+    const padding = range * 0.1; // 10% padding
 
     // Konfiguracja wykresu
     AppState.modalChart = new Chart(ctx, {
@@ -801,10 +849,14 @@ function renderModalChart(labels, data, itemName) {
                 fill: true,
                 tension: 0.4,
                 pointRadius: 0,
-                pointHoverRadius: 6,
+                pointHoverRadius: 8,
                 pointHoverBackgroundColor: lineColor,
                 pointHoverBorderColor: '#fff',
-                pointHoverBorderWidth: 2
+                pointHoverBorderWidth: 3,
+                shadowOffsetX: 0,
+                shadowOffsetY: 4,
+                shadowBlur: 8,
+                shadowColor: 'rgba(0, 0, 0, 0.1)'
             }]
         },
         options: {
@@ -814,24 +866,47 @@ function renderModalChart(labels, data, itemName) {
                 intersect: false,
                 mode: 'index'
             },
+            animation: {
+                duration: 750,
+                easing: 'easeInOutQuart'
+            },
             plugins: {
                 legend: {
                     display: false
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
+                    enabled: true,
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    titleColor: '#f8fafc',
+                    bodyColor: '#f8fafc',
+                    borderColor: lineColor,
+                    borderWidth: 2,
+                    padding: 16,
+                    cornerRadius: 8,
                     titleFont: {
-                        size: 14,
-                        weight: 'bold'
+                        size: 13,
+                        weight: '600',
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                     },
                     bodyFont: {
-                        size: 13
+                        size: 16,
+                        weight: 'bold',
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                     },
                     displayColors: false,
                     callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
                         label: function(context) {
                             return formatNumber(context.parsed.y, 4);
+                        },
+                        afterLabel: function(context) {
+                            const firstValue = data[0];
+                            const currentValue = context.parsed.y;
+                            const change = ((currentValue - firstValue) / firstValue) * 100;
+                            const changeStr = change >= 0 ? '+' : '';
+                            return `${changeStr}${change.toFixed(2)}% z początku okresu`;
                         }
                     }
                 }
@@ -839,29 +914,46 @@ function renderModalChart(labels, data, itemName) {
             scales: {
                 x: {
                     grid: {
-                        display: false
+                        display: true,
+                        color: 'rgba(226, 232, 240, 0.5)',
+                        drawBorder: false,
+                        lineWidth: 1
                     },
                     ticks: {
                         maxRotation: 0,
                         autoSkip: true,
                         maxTicksLimit: 8,
                         font: {
-                            size: 11
-                        }
+                            size: 11,
+                            weight: '500'
+                        },
+                        color: '#64748b'
+                    },
+                    border: {
+                        display: false
                     }
                 },
                 y: {
+                    min: minValue - padding,
+                    max: maxValue + padding,
                     grid: {
-                        color: '#f1f5f9',
-                        drawBorder: false
+                        color: 'rgba(226, 232, 240, 0.7)',
+                        drawBorder: false,
+                        lineWidth: 1
                     },
                     ticks: {
                         callback: function(value) {
                             return formatNumber(value, 2);
                         },
                         font: {
-                            size: 11
-                        }
+                            size: 11,
+                            weight: '500'
+                        },
+                        color: '#64748b',
+                        padding: 8
+                    },
+                    border: {
+                        display: false
                     }
                 }
             }
