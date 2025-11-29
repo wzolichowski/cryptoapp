@@ -543,6 +543,7 @@ function renderCryptoGrid() {
 // Profil użytkownika i autoryzacja (demo lokalne)
 function renderProfile() {
     const profileContent = document.getElementById('profileContent');
+    updateLogoutButton();
     
     if (AppState.user) {
         // Dane usera bez dodatkowego sanityzowania.
@@ -550,33 +551,87 @@ function renderProfile() {
         profileContent.innerHTML = `
             <div class="user-profile">
                 <div class="user-avatar">
-                    <i class="fas fa-user"></i>
+                    ${AppState.user.photoURL ? 
+                        `<img src="${AppState.user.photoURL}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` : 
+                        `<i class="fas fa-user"></i>`
+                    }
                 </div>
                 <h2>${AppState.user.name}</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">${AppState.user.email}</p>
-                <button class="btn btn-secondary" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Wyloguj
-                </button>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">${AppState.user.email}</p>
+                <p style="color: var(--text-light); font-size: 0.875rem;">
+                    <i class="fas fa-info-circle"></i>
+                    Użyj przycisku "Wyloguj" w górnym menu, aby się wylogować
+                </p>
             </div>
         `;
     } else {
         profileContent.innerHTML = `
             <div class="auth-container">
+                <div class="auth-welcome">
+                    <div class="auth-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h2>Witaj w Kursy Walut</h2>
+                    <p>Zaloguj się, aby śledzić swoje ulubione waluty i kryptowaluty</p>
+                </div>
+                
                 <div class="auth-buttons" id="authButtons">
-                    <button class="btn btn-primary btn-large" onclick="showLoginForm()">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Zaloguj się
+                    <button class="btn btn-google" onclick="handleGoogleLogin()">
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Kontynuuj z Google
                     </button>
-                    <button class="btn btn-secondary btn-large" onclick="showRegisterForm()">
+                    
+                    <div class="auth-divider">
+                        <span>lub</span>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-large" onclick="showLoginForm()">
+                        <i class="fas fa-envelope"></i>
+                        Zaloguj się przez e-mail
+                    </button>
+                    
+                    <button class="btn btn-outline btn-large" onclick="showRegisterForm()">
                         <i class="fas fa-user-plus"></i>
-                        Zarejestruj się
+                        Utwórz nowe konto
                     </button>
                 </div>
                 <div id="authFormContainer"></div>
             </div>
         `;
     }
+}
+
+// Aktualizuj widoczność przycisku wylogowania w headerze
+function updateLogoutButton() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.style.display = AppState.user ? 'flex' : 'none';
+    }
+}
+
+// Google login handler (demo - DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE)
+function handleGoogleLogin() {
+    // DEMO: symulacja logowania przez Google
+    // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - zamienić na prawdziwe Firebase Auth
+    showToast('Łączenie z Google...', 'info');
+    
+    setTimeout(() => {
+        AppState.user = {
+            name: 'Demo User',
+            email: 'demo@gmail.com',
+            photoURL: 'https://ui-avatars.com/api/?name=Demo+User&background=1e40af&color=fff&size=128'
+        };
+        
+        showToast('Zalogowano przez Google!', 'success');
+        renderProfile();
+        updateLogoutButton();
+        localStorage.setItem('user', JSON.stringify(AppState.user));
+    }, 1000);
 }
 
 function showLoginForm() {
@@ -587,31 +642,44 @@ function showLoginForm() {
     
     container.innerHTML = `
         <div class="login-form">
-            <h2 style="text-align: center; margin-bottom: 2rem;">
-                <i class="fas fa-sign-in-alt"></i>
-                Zaloguj się
-            </h2>
+            <div class="form-header">
+                <h2>Zaloguj się</h2>
+                <p>Wprowadź swoje dane logowania</p>
+            </div>
             <form onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <label for="loginEmail">Email</label>
+                    <label for="loginEmail">
+                        <i class="fas fa-envelope"></i>
+                        Email
+                    </label>
                     <input type="email" id="loginEmail" required placeholder="twoj@email.com">
                 </div>
                 <div class="form-group">
-                    <label for="loginPassword">Hasło</label>
-                    <input type="password" id="loginPassword" required placeholder="">
+                    <label for="loginPassword">
+                        <i class="fas fa-lock"></i>
+                        Hasło
+                    </label>
+                    <input type="password" id="loginPassword" required placeholder="Wprowadź hasło">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span>Zapamiętaj mnie</span>
+                    </label>
+                    <a href="#" class="forgot-link" onclick="event.preventDefault(); showToast('Funkcja resetowania hasła będzie dostępna wkrótce', 'info')">Zapomniałeś hasła?</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
                     <i class="fas fa-sign-in-alt"></i>
-                    Zaloguj
+                    Zaloguj się
                 </button>
             </form>
-            <button class="btn btn-secondary" onclick="renderProfile()" style="width: 100%;">
+            <div class="form-footer">
+                <p>Nie masz konta? <a href="#" onclick="event.preventDefault(); showRegisterForm()">Zarejestruj się</a></p>
+            </div>
+            <button class="btn btn-text" onclick="renderProfile()">
                 <i class="fas fa-arrow-left"></i>
-                Powrót
+                Powrót do opcji logowania
             </button>
-            <p style="text-align: center; margin-top: 1rem; color: var(--text-secondary); font-size: 0.875rem;">
-                💡 DEMO: login lokalny — DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE
-            </p>
         </div>
     `;
 }
@@ -624,39 +692,57 @@ function showRegisterForm() {
     
     container.innerHTML = `
         <div class="login-form">
-            <h2 style="text-align: center; margin-bottom: 2rem;">
-                <i class="fas fa-user-plus"></i>
-                Rejestracja
-            </h2>
+            <div class="form-header">
+                <h2>Utwórz konto</h2>
+                <p>Wypełnij formularz, aby się zarejestrować</p>
+            </div>
             <form onsubmit="handleRegister(event)">
                 <div class="form-group">
-                    <label for="registerName">Imię i nazwisko</label>
+                    <label for="registerName">
+                        <i class="fas fa-user"></i>
+                        Imię i nazwisko
+                    </label>
                     <input type="text" id="registerName" required placeholder="Jan Kowalski">
                 </div>
                 <div class="form-group">
-                    <label for="registerEmail">Email</label>
+                    <label for="registerEmail">
+                        <i class="fas fa-envelope"></i>
+                        Email
+                    </label>
                     <input type="email" id="registerEmail" required placeholder="twoj@email.com">
                 </div>
                 <div class="form-group">
-                    <label for="registerPassword">Hasło</label>
-                    <input type="password" id="registerPassword" required placeholder="" minlength="6">
+                    <label for="registerPassword">
+                        <i class="fas fa-lock"></i>
+                        Hasło
+                    </label>
+                    <input type="password" id="registerPassword" required placeholder="Minimum 6 znaków" minlength="6">
                 </div>
                 <div class="form-group">
-                    <label for="registerPasswordConfirm">Potwierdź hasło</label>
-                    <input type="password" id="registerPasswordConfirm" required placeholder="" minlength="6">
+                    <label for="registerPasswordConfirm">
+                        <i class="fas fa-lock"></i>
+                        Potwierdź hasło
+                    </label>
+                    <input type="password" id="registerPasswordConfirm" required placeholder="Powtórz hasło" minlength="6">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="acceptTerms" required>
+                        <span>Akceptuję <a href="#" onclick="event.preventDefault(); showToast('Regulamin będzie dostępny wkrótce', 'info')">regulamin</a> i <a href="#" onclick="event.preventDefault(); showToast('Polityka prywatności będzie dostępna wkrótce', 'info')">politykę prywatności</a></span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
                     <i class="fas fa-user-plus"></i>
                     Zarejestruj się
                 </button>
             </form>
-            <button class="btn btn-secondary" onclick="renderProfile()" style="width: 100%;">
+            <div class="form-footer">
+                <p>Masz już konto? <a href="#" onclick="event.preventDefault(); showLoginForm()">Zaloguj się</a></p>
+            </div>
+            <button class="btn btn-text" onclick="renderProfile()">
                 <i class="fas fa-arrow-left"></i>
-                Powrót
+                Powrót do opcji logowania
             </button>
-            <p style="text-align: center; margin-top: 1rem; color: var(--text-secondary); font-size: 0.875rem;">
-                💡 DEMO: rejestracja lokalna — DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE
-            </p>
         </div>
     `;
 }
@@ -676,6 +762,7 @@ function handleLogin(event) {
         
         showToast('Zalogowano pomyślnie!', 'success');
         renderProfile();
+        updateLogoutButton();
         localStorage.setItem('user', JSON.stringify(AppState.user)); // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE nie trzymać sesji w localStorage w produkcji 
     }
 }
@@ -707,6 +794,7 @@ function handleRegister(event) {
         
         showToast('Konto utworzone! Witaj ' + name + '! 🎉', 'success');
         renderProfile();
+        updateLogoutButton();
         localStorage.setItem('user', JSON.stringify(AppState.user)); // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE
     }
 }
@@ -715,6 +803,7 @@ function logout() {
     AppState.user = null;
     localStorage.removeItem('user'); // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE backend -> logout
     showToast('Wylogowano', 'info');
+    updateLogoutButton();
     renderProfile();
 }
 
@@ -899,6 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearchAndFilter();
     checkOnlineStatus();
     loadDashboardData();
+    updateLogoutButton(); // Pokaż/ukryj przycisk wylogowania
     
     // Auto refresh co 5 minut
     setInterval(() => {

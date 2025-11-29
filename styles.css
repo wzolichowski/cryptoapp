@@ -163,6 +163,15 @@ body {
     font-size: 1.1rem;
 }
 
+.nav-btn-logout {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.nav-btn-logout:hover {
+    background: rgba(239, 68, 68, 0.4);
+}
+
 /* =====================
    Main Content
    ===================== */
@@ -564,29 +573,137 @@ body {
 }
 
 /* =====================
-   Profile
+   Profile & Auth
    ===================== */
 .profile-content {
     padding: 2rem 1.5rem;
 }
 
 .auth-container {
-    max-width: 500px;
+    max-width: 420px;
     margin: 0 auto;
+}
+
+.auth-welcome {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.auth-icon i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.auth-welcome h2 {
+    font-size: 1.75rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.auth-welcome p {
+    color: var(--text-secondary);
+    font-size: 1rem;
 }
 
 .auth-buttons {
     display: flex;
+    flex-direction: column;
     gap: 1rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.5rem 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.auth-divider span {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn-google {
+    background: white;
+    color: var(--text-primary);
+    border: 2px solid var(--border);
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: var(--transition);
+}
+
+.btn-google:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.btn-google svg {
+    flex-shrink: 0;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+}
+
+.btn-text {
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+.btn-text:hover {
+    color: var(--primary);
+    background: transparent;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
 }
 
 .btn-large {
-    flex: 1;
-    min-width: 200px;
-    padding: 1.25rem 2rem;
-    font-size: 1.1rem;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
     justify-content: center;
 }
 
@@ -599,30 +716,126 @@ body {
     margin: 0 auto;
 }
 
+.form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.form-header h2 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.form-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 .form-group label {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 0.5rem;
     font-weight: 600;
     color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.form-group label i {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
 }
 
 .form-group input {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1rem;
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 1rem;
     transition: var(--transition);
+    background: var(--bg-primary);
 }
 
 .form-group input:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.form-group input::placeholder {
+    color: var(--text-light);
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.checkbox-label a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.checkbox-label a:hover {
+    text-decoration: underline;
+}
+
+.forgot-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.form-footer p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.form-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
 }
 
 .user-profile {
@@ -640,6 +853,7 @@ body {
     justify-content: center;
     font-size: 3rem;
     color: white;
+    overflow: hidden;
 }
 
 /* =====================
@@ -828,6 +1042,11 @@ body {
         padding: 0.75rem;
     }
     
+    .nav-btn-logout {
+        flex: 0 0 auto;
+        padding: 0.75rem 1rem;
+    }
+    
     .controls {
         flex-direction: column;
     }
@@ -879,11 +1098,16 @@ body {
         grid-template-columns: 1fr;
     }
     
-    .auth-buttons {
-        flex-direction: column;
+    .auth-container {
+        padding: 0 0.5rem;
     }
     
-    .btn-large {
-        width: 100%;
+    .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .auth-welcome h2 {
+        font-size: 1.5rem;
     }
 }
