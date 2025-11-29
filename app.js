@@ -1000,7 +1000,7 @@ function loadUserFromStorage() {
 
 // Start aplikacji po załadowaniu DOM
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Inicjalizacja aplikacji Kursy Walut...');
+    console.log('Initiation');
     
     loadUserFromStorage();
     loadFavoritesFromStorage();
@@ -1016,5 +1016,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 5 * 60 * 1000);
     
-    console.log('✅ Aplikacja gotowa!');
+    console.log('All set!')
 });
