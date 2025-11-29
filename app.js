@@ -741,6 +741,11 @@ function generateMockHistoricalData(currentValue, days) {
     const labels = [];
     const now = new Date();
 
+    // Generujemy losowy trend - cena mogła rosnąć lub spadać
+    // Dla przykładu: -15% do +15% zmiany w całym okresie
+    const totalChangePercent = (Math.random() * 30 - 15); // od -15% do +15%
+    const startValue = currentValue / (1 + totalChangePercent / 100);
+
     // Dla 1D generujemy dane co godzinę (24 punkty)
     if (days === 1) {
         for (let i = 23; i >= 0; i--) {
@@ -748,8 +753,14 @@ function generateMockHistoricalData(currentValue, days) {
             date.setHours(date.getHours() - i);
             labels.push(date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }));
 
-            const variance = currentValue * 0.015; // 1.5% wariancja dla 1D
-            const value = currentValue + (Math.random() - 0.5) * variance;
+            // Progress od 0 do 1 przez cały dzień
+            const progress = (23 - i) / 23;
+
+            // Interpolacja między wartością początkową a końcową z małym szumem
+            const baseValue = startValue + (currentValue - startValue) * progress;
+            const noise = baseValue * 0.008 * (Math.random() - 0.5); // 0.8% szum
+            const value = baseValue + noise;
+
             data.push(parseFloat(value.toFixed(4)));
         }
     } else {
@@ -767,9 +778,24 @@ function generateMockHistoricalData(currentValue, days) {
                 labels.push(date.toLocaleDateString('pl-PL', { month: 'short', year: '2-digit' }));
             }
 
-            // Generujemy wartość z małą losową zmianą
-            const variance = currentValue * 0.02; // 2% wariancja
-            const value = currentValue + (Math.random() - 0.5) * variance;
+            // Progress od 0 do 1 przez cały okres
+            const progress = (days - 1 - i) / (days - 1);
+
+            // Trend + losowe wahania (random walk)
+            const trendValue = startValue + (currentValue - startValue) * progress;
+
+            // Dodaj większe wahania dla dłuższych okresów
+            const volatility = days <= 7 ? 0.02 : (days <= 30 ? 0.03 : 0.04);
+            const noise = trendValue * volatility * (Math.random() - 0.5);
+
+            // Dodaj element "random walk" - każdy dzień może zmienić się względem poprzedniego
+            let value = trendValue + noise;
+
+            // Dla większego realizmu - czasem większe ruchy
+            if (Math.random() < 0.15) { // 15% szans na większy ruch
+                value += trendValue * (Math.random() * 0.06 - 0.03); // -3% do +3%
+            }
+
             data.push(parseFloat(value.toFixed(4)));
         }
     }
