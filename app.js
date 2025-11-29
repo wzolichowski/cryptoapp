@@ -293,9 +293,12 @@ async function loadDashboardData() {
         }
 
         const data = await response.json();
+        console.log("Backend response:", data); // Debug log
 
         // ==== NBP – FIAT ====
         const rawRates = data?.nbp?.raw?.[0]?.rates;
+        const nbpChanges = data?.nbp?.changes || {}; // Obliczone zmiany z backendu
+
         if (!Array.isArray(rawRates)) {
             console.error("NBP: niepoprawna struktura danych", data);
         }
@@ -312,11 +315,14 @@ async function loadDashboardData() {
         AppState.currencies = POPULAR_CURRENCIES.map(curr => ({
             ...curr,
             rate: ratesByCode[curr.code] ?? 0,
-            change: 0
+            change: nbpChanges[curr.code] ?? 0 // Używamy obliczonych zmian z backendu
         }));
+
+        console.log("Currencies with changes:", AppState.currencies); // Debug log
 
         // ==== CRYPTO – CoinGecko ====
         const prices = data?.coingecko?.prices || {};
+        console.log("CoinGecko prices:", prices); // Debug log
 
         AppState.cryptos = POPULAR_CRYPTOS.map(crypto => {
             const p = prices[crypto.id] || {};
@@ -339,6 +345,8 @@ async function loadDashboardData() {
                 change24h
             };
         });
+
+        console.log("Cryptos with changes:", AppState.cryptos); // Debug log
 
         // ==== reszta stanu + UI ====
         AppState.lastUpdate = new Date().toLocaleString("pl-PL");
@@ -492,14 +500,16 @@ function updateLastUpdateTime() {
 async function loadCryptoData() {
     const cryptoGrid = document.getElementById('cryptoGrid');
     cryptoGrid.innerHTML = '<div class="loading"><div class="spinner"></div><p>Ładowanie...</p></div>';
-    
+
     const rates = await fetchCryptoRates();
-    
+
     if (!rates) {
         cryptoGrid.innerHTML = '<div class="loading"><p>Błąd ładowania danych</p></div>';
         return;
     }
-    
+
+    console.log("Crypto rates from backend:", rates); // Debug log
+
     AppState.cryptos = POPULAR_CRYPTOS.map(crypto => ({
         ...crypto,
         pricePLN: rates[crypto.id]?.pln || 0,
@@ -508,9 +518,11 @@ async function loadCryptoData() {
             ? Number(rates[crypto.id].pln_24h_change.toFixed(2))
             : (typeof rates[crypto.id]?.usd_24h_change !== 'undefined'
                 ? Number(rates[crypto.id].usd_24h_change.toFixed(2))
-                : getRandomChange()) // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - fallback
+                : 0) // 0 jeśli brak danych
     }));
-    
+
+    console.log("Processed cryptos:", AppState.cryptos); // Debug log
+
     renderCryptoGrid();
 }
 
