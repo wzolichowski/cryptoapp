@@ -35,10 +35,6 @@
                             <i class="fab fa-bitcoin"></i>
                             <span>Krypto</span>
                         </button>
-                        <button class="nav-btn" data-view="charts">
-                            <i class="fas fa-chart-area"></i>
-                            <span>Wykresy</span>
-                        </button>
                         <button class="nav-btn" data-view="profile">
                             <i class="fas fa-user"></i>
                             <span>Profil</span>
@@ -160,34 +156,6 @@
                     </div>
                 </section>
 
-                <!-- Charts View -->
-                <section id="charts" class="view">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>Wykres kursów</h2>
-                            <div class="chart-controls">
-                                <select id="chartCurrency" class="select">
-                                    <option value="USD">USD/PLN</option>
-                                    <option value="EUR">EUR/PLN</option>
-                                    <option value="GBP">GBP/PLN</option>
-                                    <option value="CHF">CHF/PLN</option>
-                                    <option value="BTC">BTC/PLN</option>
-                                    <option value="ETH">ETH/PLN</option>
-                                    <option value="LTC">LTC/PLN</option>
-                                </select>
-                                <select id="chartPeriod" class="select">
-                                    <option value="7">7 dni</option>
-                                    <option value="30">30 dni</option>
-                                    <option value="90">90 dni</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="currencyChart"></canvas>
-                        </div>
-                    </div>
-                </section>
-
                 <!-- Profile View -->
                 <section id="profile" class="view">
                     <div class="card">
@@ -217,16 +185,29 @@
 
         <!-- Modal szczegółów -->
         <div id="detailModal" class="modal">
-            <div class="modal-content">
+            <div class="modal-content modal-content-large">
                 <div class="modal-header">
-                    <h2 id="modalItemName">Szczegóły</h2>
+                    <div class="modal-title-group">
+                        <div class="modal-icon" id="modalItemIcon">?</div>
+                        <h2 id="modalItemName">Szczegóły</h2>
+                    </div>
                     <button class="modal-close" onclick="closeDetailModal()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="crypto-detail-icon" id="modalItemIcon">?</div>
-                    <div class="crypto-detail-info" id="modalDetailInfo">
+                    <div class="chart-period-selector">
+                        <button class="period-btn" data-period="1" onclick="changeChartPeriod('1')">1D</button>
+                        <button class="period-btn" data-period="7" onclick="changeChartPeriod('7')">1W</button>
+                        <button class="period-btn active" data-period="30" onclick="changeChartPeriod('30')">1M</button>
+                        <button class="period-btn" data-period="90" onclick="changeChartPeriod('90')">3M</button>
+                        <button class="period-btn" data-period="180" onclick="changeChartPeriod('180')">6M</button>
+                        <button class="period-btn" data-period="365" onclick="changeChartPeriod('365')">1Y</button>
+                    </div>
+                    <div class="modal-chart-container">
+                        <canvas id="modalChart"></canvas>
+                    </div>
+                    <div class="modal-detail-info" id="modalDetailInfo">
                         <!-- Szczegóły będą wstawiane dynamicznie -->
                     </div>
                 </div>
@@ -234,6 +215,7 @@
         </div>
 
         <!-- Scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         <script src="app.js"></script>
         <script>
             // SW registration

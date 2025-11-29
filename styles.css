@@ -818,6 +818,90 @@ body {
 }
 
 /* =====================
+   Modal Chart Styles
+   ===================== */
+.modal-content-large {
+    max-width: 900px;
+    width: 95%;
+}
+
+.modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.modal-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.chart-period-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+}
+
+.period-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: var(--transition);
+    min-width: 60px;
+}
+
+.period-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(30, 64, 175, 0.05);
+}
+
+.period-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.modal-chart-container {
+    position: relative;
+    height: 350px;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.modal-chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.modal-detail-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* =====================
    Responsive Design
    ===================== */
 @media (max-width: 768px) {

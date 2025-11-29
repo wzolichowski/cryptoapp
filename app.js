@@ -6,7 +6,10 @@ const AppState = {
     cryptos: [],
     user: null,
     lastUpdate: null,
-    favorites: [] // { type: 'currency' | 'crypto', code: 'USD' | 'bitcoin' }
+    favorites: [], // { type: 'currency' | 'crypto', code: 'USD' | 'bitcoin' }
+    modalChart: null, // Instancja wykresu Chart.js
+    currentChartData: null, // Dane dla aktualnie wyświetlanego wykresu
+    currentChartPeriod: 30 // Domyślny okres: 30 dni
 };
 
 const FIREBASE_API_URL =
@@ -213,20 +216,18 @@ function switchView(viewName) {
     document.querySelectorAll('.view').forEach(view => {
         view.classList.remove('active');
     });
-    
+
     const selectedView = document.getElementById(viewName);
     if (selectedView) {
         selectedView.classList.add('active');
         AppState.currentView = viewName;
-        
-        // ładujemy dane 
+
+        // ładujemy dane
         if (viewName === 'crypto') {
             loadCryptoData();
-        } else if (viewName === 'charts') {
-            loadChartData();
         } else if (viewName === 'profile') {
-        renderProfile();
-}
+            renderProfile();
+        }
     }
 }
 
@@ -554,113 +555,6 @@ function renderCryptoGrid() {
     }).join('');
 }
 
-// Wykresy (mockowane dane demo)
-function loadChartData() {
-    const canvas = document.getElementById('currencyChart');
-    const ctx = canvas.getContext('2d');
-    
-    // Clear previous chart
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Generate mock historical data
-    // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - podmienić na rzeczywiste dane z API 
-    const days = 7;
-    const labels = [];
-    const data = [];
-    const baseRate = 4.0;
-    
-    for (let i = days; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        labels.push(date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }));
-        data.push(baseRate + (Math.random() * 0.2 - 0.1));
-    }
-    
-    drawChart(ctx, canvas, labels, data);
-    
-    // Reaktywacja kkontrolek konfiguracyjnych
-    document.getElementById('chartCurrency')?.addEventListener('change', loadChartData);
-    document.getElementById('chartPeriod')?.addEventListener('change', loadChartData);
-}
-
-// canvas tworzenie wykresu
-function drawChart(ctx, canvas, labels, data) {
-    const padding = 40;
-    const width = canvas.width - 2 * padding;
-    const height = canvas.height - 2 * padding;
-    
-    // rozmiar canvas ( wiekszy ) 
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 400;
-    
-    const maxValue = Math.max(...data);
-    const minValue = Math.min(...data);
-    const range = maxValue - minValue || 1; // guard przed 0 
-    
-    // Oś i siatka graph
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, canvas.height - padding);
-    ctx.lineTo(canvas.width - padding, canvas.height - padding);
-    ctx.stroke();
-    
-    ctx.strokeStyle = '#f1f5f9';
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 5; i++) {
-        const y = padding + (height / 5) * i;
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(canvas.width - padding, y);
-        ctx.stroke();
-    }
-    
-    // Linia wartości grafu
-    ctx.strokeStyle = '#1e40af';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    
-    data.forEach((value, index) => {
-        const x = padding + (width / (data.length - 1)) * index;
-        const y = canvas.height - padding - ((value - minValue) / range) * height;
-        
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
-    
-    ctx.stroke();
-    
-    // Punkty na grafie 
-    ctx.fillStyle = '#1e40af';
-    data.forEach((value, index) => {
-        const x = padding + (width / (data.length - 1)) * index;
-        const y = canvas.height - padding - ((value - minValue) / range) * height;
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    
-    // Opisy osi grafu
-    ctx.fillStyle = '#64748b';
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'center';
-    
-    labels.forEach((label, index) => {
-        const x = padding + (width / (data.length - 1)) * index;
-        ctx.fillText(label, x, canvas.height - padding + 20);
-    });
-    
-    // Wartości po lewej osi
-    ctx.textAlign = 'right';
-    for (let i = 0; i <= 5; i++) {
-        const value = minValue + (range / 5) * (5 - i);
-        const y = padding + (height / 5) * i;
-        ctx.fillText(formatNumber(value, 2), padding - 10, y + 5);
-    }
-}
-
 // Profil użytkownika i autoryzacja (demo lokalne)
 function renderProfile() {
     const profileContent = document.getElementById('profileContent');
@@ -839,14 +733,170 @@ function logout() {
     renderProfile();
 }
 
+// ==================== CHART FUNCTIONS ====================
+
+// Generowanie mock danych historycznych dla wykresu
+function generateMockHistoricalData(currentValue, days) {
+    const data = [];
+    const labels = [];
+    const now = new Date();
+
+    // Generujemy dane wstecz od dzisiaj
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+
+        // Formatowanie daty
+        if (days <= 7) {
+            // Dla krótkiego okresu: pokazuj godziny
+            labels.push(date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }));
+        } else if (days <= 90) {
+            // Dla średniego okresu: pokazuj dni
+            labels.push(date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }));
+        } else {
+            // Dla długiego okresu: pokazuj miesiące
+            labels.push(date.toLocaleDateString('pl-PL', { month: 'short', year: '2-digit' }));
+        }
+
+        // Generujemy wartość z małą losową zmianą
+        const variance = currentValue * 0.02; // 2% wariancja
+        const value = currentValue + (Math.random() - 0.5) * variance;
+        data.push(parseFloat(value.toFixed(4)));
+    }
+
+    return { labels, data };
+}
+
+// Renderowanie wykresu z Chart.js
+function renderModalChart(labels, data, itemName) {
+    const canvas = document.getElementById('modalChart');
+    const ctx = canvas.getContext('2d');
+
+    // Zniszcz poprzedni wykres jeśli istnieje
+    if (AppState.modalChart) {
+        AppState.modalChart.destroy();
+    }
+
+    // Określ czy wartości rosną czy maleją (dla koloru)
+    const isPositive = data[data.length - 1] >= data[0];
+    const lineColor = isPositive ? '#10b981' : '#ef4444';
+    const gradientColor = isPositive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+
+    // Gradient pod wykresem
+    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+    gradient.addColorStop(0, gradientColor);
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    // Konfiguracja wykresu
+    AppState.modalChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: itemName,
+                data: data,
+                borderColor: lineColor,
+                backgroundColor: gradient,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: lineColor,
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return formatNumber(context.parsed.y, 4);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 8,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                y: {
+                    grid: {
+                        color: '#f1f5f9',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return formatNumber(value, 2);
+                        },
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Zmiana okresu wykresu
+function changeChartPeriod(days) {
+    AppState.currentChartPeriod = parseInt(days);
+
+    // Aktualizuj przyciski
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.period === days) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Przerysuj wykres z nowymi danymi
+    if (AppState.currentChartData) {
+        const { currentValue, itemName } = AppState.currentChartData;
+        const { labels, data } = generateMockHistoricalData(currentValue, AppState.currentChartPeriod);
+        renderModalChart(labels, data, itemName);
+    }
+}
+
 function showDetails(code) {
     const currency = AppState.currencies.find(c => c.code === code);
     if (!currency) return;
-    
+
     // wypełniamy modal danymi waluty
     document.getElementById('modalItemName').textContent = currency.name;
     document.getElementById('modalItemIcon').textContent = currency.flag;
-    
+
     const change = parseFloat(currency.change);
     const detailInfo = `
         <div class="detail-row">
@@ -858,17 +908,35 @@ function showDetails(code) {
             <span class="detail-value">${currency.symbol}</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Kurs (${AppState.baseCurrency}):</span>
-            <span class="detail-value">${formatNumber(currency.rate, 4)}</span>
+            <span class="detail-label">Aktualny kurs:</span>
+            <span class="detail-value">${formatNumber(currency.rate, 4)} ${AppState.baseCurrency}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Zmiana 24h:</span>
             <span class="detail-value stat-change ${change >= 0 ? 'positive' : 'negative'}">${change > 0 ? '+' : ''}${change}%</span>
         </div>
     `;
-    
+
     document.getElementById('modalDetailInfo').innerHTML = detailInfo;
-    
+
+    // Resetuj przyciski okresu do domyślnego (30 dni)
+    AppState.currentChartPeriod = 30;
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.period === '30') {
+            btn.classList.add('active');
+        }
+    });
+
+    // Zapisz dane do state i wygeneruj wykres
+    AppState.currentChartData = {
+        currentValue: currency.rate,
+        itemName: `${currency.code}/PLN`
+    };
+
+    const { labels, data } = generateMockHistoricalData(currency.rate, AppState.currentChartPeriod);
+    renderModalChart(labels, data, `${currency.code}/PLN`);
+
     // pokazujemy modal
     document.getElementById('detailModal').style.display = 'flex';
 }
@@ -876,11 +944,11 @@ function showDetails(code) {
 function showCryptoDetails(id) {
     const crypto = AppState.cryptos.find(c => c.id === id);
     if (!crypto) return;
-    
+
     // wypełniamy modal danymi krypto
     document.getElementById('modalItemName').textContent = crypto.name;
-    document.getElementById('modalItemIcon').textContent = crypto.symbol;
-    
+    document.getElementById('modalItemIcon').textContent = crypto.icon;
+
     const change = parseFloat(crypto.change24h);
     const detailInfo = `
         <div class="detail-row">
@@ -888,11 +956,11 @@ function showCryptoDetails(id) {
             <span class="detail-value">${crypto.symbol}</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Cena (PLN):</span>
+            <span class="detail-label">Aktualna cena (PLN):</span>
             <span class="detail-value">${formatCurrency(crypto.pricePLN)}</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Cena (USD):</span>
+            <span class="detail-label">Aktualna cena (USD):</span>
             <span class="detail-value">$${formatNumber(crypto.priceUSD, 2)}</span>
         </div>
         <div class="detail-row">
@@ -900,9 +968,27 @@ function showCryptoDetails(id) {
             <span class="detail-value stat-change ${change >= 0 ? 'positive' : 'negative'}">${change > 0 ? '+' : ''}${change}%</span>
         </div>
     `;
-    
+
     document.getElementById('modalDetailInfo').innerHTML = detailInfo;
-    
+
+    // Resetuj przyciski okresu do domyślnego (30 dni)
+    AppState.currentChartPeriod = 30;
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.period === '30') {
+            btn.classList.add('active');
+        }
+    });
+
+    // Zapisz dane do state i wygeneruj wykres
+    AppState.currentChartData = {
+        currentValue: crypto.pricePLN,
+        itemName: `${crypto.symbol}/PLN`
+    };
+
+    const { labels, data } = generateMockHistoricalData(crypto.pricePLN, AppState.currentChartPeriod);
+    renderModalChart(labels, data, `${crypto.symbol}/PLN`);
+
     // pokazujemy modal
     document.getElementById('detailModal').style.display = 'flex';
 }
