@@ -6,7 +6,7 @@ const AppState = {
     cryptos: [],
     user: null,
     lastUpdate: null,
-    favorites: [] // { type: 'currency' | 'crypto', code: 'USD' | 'bitcoin' }
+    favorites: []
 };
 
 const FIREBASE_API_URL =
@@ -18,7 +18,6 @@ const API_CONFIG = {
     nbp: 'https://api.nbp.pl/api/exchangerates/tables/A/?format=json'
 };
 
-// Lista glownych walut ktore wswietlamy = mysle ze chyba trzeba dodac tu krypto - co sadzicie ?
 const POPULAR_CURRENCIES = [
     { code: 'USD', name: 'Dolar amerykański', symbol: '$', flag: '🇺🇸' },
     { code: 'EUR', name: 'Euro', symbol: '€', flag: '🇪🇺' },
@@ -43,7 +42,6 @@ const POPULAR_CRYPTOS = [
     { id: 'ripple', name: 'Ripple', symbol: 'XRP', icon: 'XRP' }
 ];
 
-// Małe helpery formatowanie toast i liczb
 function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -74,12 +72,9 @@ function calculateChange(current, previous) {
 }
 
 function getRandomChange() {
-    // DEMO: losowa zmiana 24h, używamy tylko jako fallback
-    // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - podmianka na API 
     return (Math.random() * 4 - 2).toFixed(2);
 }
 
-// system ulubionych
 function loadFavoritesFromStorage() {
     const saved = localStorage.getItem('favorites');
     if (saved) {
@@ -99,14 +94,12 @@ function toggleFavorite(code, type) {
     const index = AppState.favorites.findIndex(f => f.code === code && f.type === type);
     
     if (index >= 0) {
-        // usun z ulubionych
         AppState.favorites.splice(index, 1);
         const name = type === 'crypto' ? 
             AppState.cryptos.find(c => c.id === code)?.name : 
             AppState.currencies.find(c => c.code === code)?.name;
         showToast(`${name || code} usunięto z ulubionych`, 'info');
     } else {
-        // dodaj do ulubionych (bez limitu)
         AppState.favorites.unshift({ code, type });
         const name = type === 'crypto' ? 
             AppState.cryptos.find(c => c.id === code)?.name : 
@@ -181,22 +174,22 @@ function renderFavoritesCards() {
     
     favoritesGrid.innerHTML = cards;
 }
-// header button
+
 function initNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
     
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const viewName = btn.dataset.view;
+            if (!viewName) return;
+            
             switchView(viewName);
             
-            // zaznacz aktywny przycisk
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         });
     });
     
-    // logo jako button do dashboardu
     const logoBtn = document.querySelector('.logo');
     if (logoBtn) {
         logoBtn.style.cursor = 'pointer';
@@ -208,7 +201,6 @@ function initNavigation() {
     }
 }
 
-// Przełączanie widoków 
 function switchView(viewName) {
     document.querySelectorAll('.view').forEach(view => {
         view.classList.remove('active');
@@ -219,7 +211,6 @@ function switchView(viewName) {
         selectedView.classList.add('active');
         AppState.currentView = viewName;
         
-        // ładujemy dane 
         if (viewName === 'crypto') {
             loadCryptoData();
         } else if (viewName === 'profile') {
@@ -228,7 +219,6 @@ function switchView(viewName) {
     }
 }
 
-// Fetch kursów walut (publiczne API)
 async function fetchExchangeRates(base = 'PLN') {
     try {
         const response = await fetch(FIREBASE_API_URL);
@@ -259,7 +249,6 @@ async function fetchExchangeRates(base = 'PLN') {
     }
 }
 
-// Fetch cen krypto z CoinGecko
 async function fetchCryptoRates() {
    try {
         const response = await fetch(FIREBASE_API_URL);
@@ -284,7 +273,6 @@ async function fetchCryptoRates() {
 
 async function loadDashboardData() {
     try {
-        // Jeden request do backendu Firebase
         const response = await fetch(FIREBASE_API_URL);
         if (!response.ok) {
             throw new Error("Błąd komunikacji z backendem");
@@ -292,7 +280,6 @@ async function loadDashboardData() {
 
         const data = await response.json();
 
-        // ==== NBP – FIAT ====
         const rawRates = data?.nbp?.raw?.[0]?.rates;
         if (!Array.isArray(rawRates)) {
             console.error("NBP: niepoprawna struktura danych", data);
@@ -313,7 +300,6 @@ async function loadDashboardData() {
             change: 0
         }));
 
-        // ==== CRYPTO – CoinGecko ====
         const prices = data?.coingecko?.prices || {};
 
         AppState.cryptos = POPULAR_CRYPTOS.map(crypto => {
@@ -327,7 +313,7 @@ async function loadDashboardData() {
             } else if (typeof p.usd_24h_change === "number") {
                 change24h = Number(p.usd_24h_change.toFixed(2));
             } else {
-                change24h = 0; // brak danych -> 0 zamiast losowania
+                change24h = 0;
             }
 
             return {
@@ -338,7 +324,6 @@ async function loadDashboardData() {
             };
         });
 
-        // ==== reszta stanu + UI ====
         AppState.lastUpdate = new Date().toLocaleString("pl-PL");
 
         updateCurrencyTable();
@@ -352,7 +337,6 @@ async function loadDashboardData() {
     }
 }
 
-// Render tabeli walut 
 function updateCurrencyTable() {
     const tbody = document.getElementById('currencyTableBody');
     
@@ -367,7 +351,6 @@ function updateCurrencyTable() {
         return;
     }
     
-    // sortowanie - ulubione najpierw
     const sortedCurrencies = [...AppState.currencies].sort((a, b) => {
         const aIsFav = isFavorite(a.code, 'currency');
         const bIsFav = isFavorite(b.code, 'currency');
@@ -414,9 +397,6 @@ function updateCurrencyTable() {
     }).join('');
 }
 
-
-
-// Render tabeli krypto na dashboardzie
 function updateCryptoTable() {
     const tbody = document.getElementById('cryptoTableBody');
     
@@ -431,7 +411,6 @@ function updateCryptoTable() {
         return;
     }
     
-    // sortowanie - ulubione najpierw
     const sortedCryptos = [...AppState.cryptos].sort((a, b) => {
         const aIsFav = isFavorite(a.id, 'crypto');
         const bIsFav = isFavorite(b.id, 'crypto');
@@ -478,7 +457,6 @@ function updateCryptoTable() {
     }).join('');
 }
 
-// Aktualizacja czasu ostatniego odświeżenia
 function updateLastUpdateTime() {
     const updateElement = document.getElementById('lastUpdate');
     if (updateElement && AppState.lastUpdate) {
@@ -486,7 +464,6 @@ function updateLastUpdateTime() {
     }
 }
 
-// Ładowanie krypto
 async function loadCryptoData() {
     const cryptoGrid = document.getElementById('cryptoGrid');
     cryptoGrid.innerHTML = '<div class="loading"><div class="spinner"></div><p>Ładowanie...</p></div>';
@@ -506,13 +483,12 @@ async function loadCryptoData() {
             ? Number(rates[crypto.id].pln_24h_change.toFixed(2))
             : (typeof rates[crypto.id]?.usd_24h_change !== 'undefined'
                 ? Number(rates[crypto.id].usd_24h_change.toFixed(2))
-                : getRandomChange()) // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - fallback
+                : getRandomChange())
     }));
     
     renderCryptoGrid();
 }
 
-// Render siatki krypto
 function renderCryptoGrid() {
     const cryptoGrid = document.getElementById('cryptoGrid');
     
@@ -540,14 +516,11 @@ function renderCryptoGrid() {
     }).join('');
 }
 
-// Profil użytkownika i autoryzacja (demo lokalne)
 function renderProfile() {
     const profileContent = document.getElementById('profileContent');
     updateLogoutButton();
     
     if (AppState.user) {
-        // Dane usera bez dodatkowego sanityzowania.
-        // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - zamienić na bezpieczne renderowanie z backendu/session
         profileContent.innerHTML = `
             <div class="user-profile">
                 <div class="user-avatar">
@@ -606,7 +579,6 @@ function renderProfile() {
     }
 }
 
-// Aktualizuj widoczność przycisku wylogowania w headerze
 function updateLogoutButton() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
@@ -614,24 +586,9 @@ function updateLogoutButton() {
     }
 }
 
-// Google login handler (demo - DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE)
 function handleGoogleLogin() {
-    // DEMO: symulacja logowania przez Google
-    // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - zamienić na prawdziwe Firebase Auth
-    showToast('Łączenie z Google...', 'info');
-    
-    setTimeout(() => {
-        AppState.user = {
-            name: 'Demo User',
-            email: 'demo@gmail.com',
-            photoURL: 'https://ui-avatars.com/api/?name=Demo+User&background=1e40af&color=fff&size=128'
-        };
-        
-        showToast('Zalogowano przez Google!', 'success');
-        renderProfile();
-        updateLogoutButton();
-        localStorage.setItem('user', JSON.stringify(AppState.user));
-    }, 1000);
+    // TODO: Zastąpić Firebase Auth signInWithPopup()
+    showToast('Logowanie przez Google będzie dostępne wkrótce', 'info');
 }
 
 function showLoginForm() {
@@ -652,7 +609,7 @@ function showLoginForm() {
                         <i class="fas fa-envelope"></i>
                         Email
                     </label>
-                    <input type="email" id="loginEmail" required placeholder="twoj@email.com">
+                    <input type="email" id="loginEmail" required placeholder="">
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">
@@ -666,7 +623,7 @@ function showLoginForm() {
                         <input type="checkbox" id="rememberMe">
                         <span>Zapamiętaj mnie</span>
                     </label>
-                    <a href="#" class="forgot-link" onclick="event.preventDefault(); showToast('Funkcja resetowania hasła będzie dostępna wkrótce', 'info')">Zapomniałeś hasła?</a>
+                    <a href="#" class="forgot-link" onclick="event.preventDefault(); showForgotPasswordForm()">Zapomniałeś hasła?</a>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">
                     <i class="fas fa-sign-in-alt"></i>
@@ -747,13 +704,64 @@ function showRegisterForm() {
     `;
 }
 
+function showForgotPasswordForm() {
+    const container = document.getElementById('authFormContainer');
+    const buttons = document.getElementById('authButtons');
+    
+    buttons.style.display = 'none';
+    
+    container.innerHTML = `
+        <div class="login-form">
+            <div class="form-header">
+                <h2>Resetowanie hasła</h2>
+                <p>Podaj swój adres e-mail, a wyślemy Ci link do zresetowania hasła</p>
+            </div>
+            <form onsubmit="handleForgotPassword(event)">
+                <div class="form-group">
+                    <label for="resetEmail">
+                        <i class="fas fa-envelope"></i>
+                        Email
+                    </label>
+                    <input type="email" id="resetEmail" required placeholder="twoj@email.com">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-paper-plane"></i>
+                    Wyślij link resetujący
+                </button>
+            </form>
+            <div class="form-footer">
+                <p>Pamiętasz hasło? <a href="#" onclick="event.preventDefault(); showLoginForm()">Zaloguj się</a></p>
+            </div>
+            <button class="btn btn-text" onclick="renderProfile()">
+                <i class="fas fa-arrow-left"></i>
+                Powrót do opcji logowania
+            </button>
+        </div>
+    `;
+}
+
+function handleForgotPassword(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('resetEmail').value;
+    
+    // TODO: Zastąpić Firebase Auth sendPasswordResetEmail()
+    if (email) {
+        showToast('Link do resetowania hasła został wysłany na ' + email, 'success');
+        
+        setTimeout(() => {
+            showLoginForm();
+        }, 2000);
+    }
+}
+
 function handleLogin(event) {
     event.preventDefault();
     
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
-    // DEMO login lokalny — DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE (backend auth)
+    // TODO: Zastąpić Firebase Auth
     if (email && password) {
         AppState.user = {
             name: email.split('@')[0],
@@ -763,7 +771,7 @@ function handleLogin(event) {
         showToast('Zalogowano pomyślnie!', 'success');
         renderProfile();
         updateLogoutButton();
-        localStorage.setItem('user', JSON.stringify(AppState.user)); // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE nie trzymać sesji w localStorage w produkcji 
+        localStorage.setItem('user', JSON.stringify(AppState.user));
     }
 }
 
@@ -785,7 +793,7 @@ function handleRegister(event) {
         return;
     }
     
-    // DEMO: lokalna rejestracja — DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE
+    // TODO: Zastąpić Firebase Auth
     if (name && email && password) {
         AppState.user = {
             name: name,
@@ -795,23 +803,25 @@ function handleRegister(event) {
         showToast('Konto utworzone! Witaj ' + name + '! 🎉', 'success');
         renderProfile();
         updateLogoutButton();
-        localStorage.setItem('user', JSON.stringify(AppState.user)); // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE
+        localStorage.setItem('user', JSON.stringify(AppState.user));
     }
 }
 
 function logout() {
     AppState.user = null;
-    localStorage.removeItem('user'); // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE backend -> logout
+    localStorage.removeItem('user');
     showToast('Wylogowano', 'info');
     updateLogoutButton();
-    renderProfile();
+    
+    setTimeout(() => {
+        location.reload();
+    }, 500);
 }
 
 function showDetails(code) {
     const currency = AppState.currencies.find(c => c.code === code);
     if (!currency) return;
     
-    // wypełniamy modal danymi waluty
     document.getElementById('modalItemName').textContent = currency.name;
     document.getElementById('modalItemIcon').textContent = currency.flag;
     
@@ -836,8 +846,6 @@ function showDetails(code) {
     `;
     
     document.getElementById('modalDetailInfo').innerHTML = detailInfo;
-    
-    // pokazujemy modal
     document.getElementById('detailModal').style.display = 'flex';
 }
 
@@ -845,7 +853,6 @@ function showCryptoDetails(id) {
     const crypto = AppState.cryptos.find(c => c.id === id);
     if (!crypto) return;
     
-    // wypełniamy modal danymi krypto
     document.getElementById('modalItemName').textContent = crypto.name;
     document.getElementById('modalItemIcon').textContent = crypto.symbol;
     
@@ -870,8 +877,6 @@ function showCryptoDetails(id) {
     `;
     
     document.getElementById('modalDetailInfo').innerHTML = detailInfo;
-    
-    // pokazujemy modal
     document.getElementById('detailModal').style.display = 'flex';
 }
 
@@ -879,7 +884,6 @@ function closeDetailModal() {
     document.getElementById('detailModal').style.display = 'none';
 }
 
-// zamknij modal po kliknieciu poza nim
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('detailModal');
     if (e.target === modal) {
@@ -887,7 +891,6 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// zamknij modal po wciśnięciu ESC
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const modal = document.getElementById('detailModal');
@@ -897,7 +900,6 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// Search i filtr
 function initSearchAndFilter() {
     const searchInput = document.getElementById('searchInput');
     const baseCurrencySelect = document.getElementById('baseCurrency');
@@ -931,9 +933,7 @@ function filterCurrencies(searchTerm) {
     });
 }
 
-// Eksport CSV 
 function exportData() {
-    // TODO: poprawić escapowanie CSV przed produkcją (obsługa przecinków/cudzysłowów)
     const csvContent = [
         ['Waluta', 'Kod', 'Kurs', 'Zmiana 24h'],
         ...AppState.currencies.map(c => [c.name, c.code, c.rate, c.change])
@@ -951,7 +951,6 @@ function exportData() {
     showToast('Dane wyeksportowane!', 'success');
 }
 
-// Sprawdzanie statusu online/offline
 function checkOnlineStatus() {
     const statusElement = document.getElementById('installStatus');
     
@@ -970,15 +969,13 @@ function checkOnlineStatus() {
     window.addEventListener('offline', updateStatus);
 }
 
-// Wczytaj usera z localStorage (demo)
 function loadUserFromStorage() {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
-        AppState.user = JSON.parse(savedUser); // DO USUNIĘCIA JAK JUŻ BĘDZIE ONLINE - api backend
+        AppState.user = JSON.parse(savedUser);
     }
 }
 
-// Start aplikacji po załadowaniu DOM
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initiation');
     
@@ -988,9 +985,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearchAndFilter();
     checkOnlineStatus();
     loadDashboardData();
-    updateLogoutButton(); // Pokaż/ukryj przycisk wylogowania
+    updateLogoutButton();
     
-    // Auto refresh co 5 minut
     setInterval(() => {
         if (AppState.currentView === 'dashboard') {
             loadDashboardData();

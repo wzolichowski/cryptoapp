@@ -39,7 +39,7 @@
                             <i class="fas fa-user"></i>
                             <span>Profil</span>
                         </button>
-                        <button class="nav-btn nav-btn-logout" id="logoutBtn" style="display: none;" onclick="logout()">
+                        <button class="nav-btn" id="logoutBtn" style="display: none;" onclick="logout()">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>Wyloguj</span>
                         </button>
@@ -211,7 +211,7 @@
             // SW registration
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('./sw.js')
+                    navigator.serviceWorker.register('./pwa/sw.js')
                         .then(reg => console.log('Service Worker zarejestrowany'))
                         .catch(err => console.log('Błąd Service Worker:', err));
                 });

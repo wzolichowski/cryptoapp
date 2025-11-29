@@ -163,15 +163,6 @@ body {
     font-size: 1.1rem;
 }
 
-.nav-btn-logout {
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.nav-btn-logout:hover {
-    background: rgba(239, 68, 68, 0.4);
-}
-
 /* =====================
    Main Content
    ===================== */
@@ -1040,11 +1031,6 @@ body {
         flex: 1;
         justify-content: center;
         padding: 0.75rem;
-    }
-    
-    .nav-btn-logout {
-        flex: 0 0 auto;
-        padding: 0.75rem 1rem;
     }
     
     .controls {
