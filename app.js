@@ -7,7 +7,9 @@ const AppState = {
     user: null,
     lastUpdate: null,
     favorites: [],
-    previousCurrencyRates: {}
+    previousCurrencyRates: {},
+    currentChart: null,  // Aktualny wykres Chart.js
+    currentChartData: { type: null, code: null } // Type: 'currency' | 'crypto', code: waluta/crypto ID
 };
 
 
@@ -164,11 +166,6 @@ function calculateChange(current, previous) {
 
 function getRandomChange() {
     return (Math.random() * 4 - 2).toFixed(2);
-}
-
-
-function saveFavoritesToStorage() {
-    localStorage.setItem('favorites', JSON.stringify(AppState.favorites));
 }
 
 function isFavorite(code, type) {
@@ -1182,6 +1179,8 @@ function logout() {
             updateLogoutButton();
             renderProfile();
             renderFavoritesCards();
+            updateCurrencyTable();
+            updateCryptoTable();
         })
         .catch((error) => {
             console.error('Logout error:', error);
@@ -1189,6 +1188,168 @@ function logout() {
         });
 }
 
+// ===========================
+// WYKRESY - Funkcje pomocnicze
+// ===========================
+
+async function fetchCryptoHistoricalData(cryptoId, days) {
+    try {
+        const url = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart?vs_currency=pln&days=${days}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('CoinGecko API error');
+
+        const data = await response.json();
+        // data.prices to tablica [[timestamp, cena], [timestamp, cena], ...]
+        return data.prices.map(([timestamp, price]) => ({
+            date: new Date(timestamp),
+            price: price
+        }));
+    } catch (error) {
+        console.error('Błąd pobierania danych historycznych krypto:', error);
+        return null;
+    }
+}
+
+async function fetchCurrencyHistoricalData(currencyCode, days) {
+    try {
+        // NBP API ma limit 255 dni dla /last/{n}
+        const nbpDays = Math.min(days, 255);
+        const url = `https://api.nbp.pl/api/exchangerates/rates/A/${currencyCode}/last/${nbpDays}/?format=json`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('NBP API error');
+
+        const data = await response.json();
+        // data.rates to tablica obiektów z effectiveDate i mid
+        return data.rates.map(rate => ({
+            date: new Date(rate.effectiveDate),
+            price: rate.mid
+        }));
+    } catch (error) {
+        console.error('Błąd pobierania danych historycznych waluty:', error);
+        return null;
+    }
+}
+
+function renderChart(chartData, label) {
+    const ctx = document.getElementById('priceChart');
+    if (!ctx) return;
+
+    // Zniszcz poprzedni wykres jeśli istnieje
+    if (AppState.currentChart) {
+        AppState.currentChart.destroy();
+    }
+
+    const labels = chartData.map(d => d.date.toLocaleDateString('pl-PL'));
+    const prices = chartData.map(d => d.price);
+
+    AppState.currentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: prices,
+                borderColor: '#1e40af',
+                backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: '#1e40af',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `Cena: ${context.parsed.y.toFixed(4)} PLN`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(2);
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxTicksLimit: 8
+                    }
+                }
+            }
+        }
+    });
+}
+
+async function loadAndRenderChart(type, code, days) {
+    const chartContainer = document.getElementById('chartContainer');
+    const chartButtons = document.getElementById('chartPeriodButtons');
+
+    if (!chartContainer || !chartButtons) return;
+
+    // Pokaż kontener i przyciski
+    chartContainer.style.display = 'block';
+    chartButtons.style.display = 'flex';
+
+    // Pokaż loading
+    chartContainer.innerHTML = '<div class="loading"><div class="spinner"></div><p>Ładowanie wykresu...</p></div>';
+
+    let chartData;
+    let label;
+
+    if (type === 'crypto') {
+        chartData = await fetchCryptoHistoricalData(code, days);
+        const crypto = AppState.cryptos.find(c => c.id === code);
+        label = crypto ? `${crypto.name} (PLN)` : 'Kryptowaluta (PLN)';
+    } else if (type === 'currency') {
+        chartData = await fetchCurrencyHistoricalData(code, days);
+        const currency = AppState.currencies.find(c => c.code === code);
+        label = currency ? `${currency.name} (PLN)` : 'Waluta (PLN)';
+    }
+
+    if (!chartData || chartData.length === 0) {
+        chartContainer.innerHTML = '<div class="loading"><p>Brak danych historycznych</p></div>';
+        return;
+    }
+
+    // Przywróć canvas
+    chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
+    renderChart(chartData, label);
+}
+
+function initChartPeriodButtons() {
+    const buttons = document.querySelectorAll('.period-btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Usuń active ze wszystkich
+            buttons.forEach(b => b.classList.remove('active'));
+            // Dodaj active do klikniętego
+            btn.classList.add('active');
+
+            // Pobierz okres
+            const days = parseInt(btn.dataset.period);
+            const { type, code } = AppState.currentChartData;
+
+            if (type && code) {
+                loadAndRenderChart(type, code, days);
+            }
+        });
+    });
+}
 
 
 function showDetails(code) {
@@ -1217,9 +1378,13 @@ function showDetails(code) {
             <span class="detail-value stat-change ${change >= 0 ? 'positive' : 'negative'}">${change > 0 ? '+' : ''}${change}%</span>
         </div>
     `;
-    
+
     document.getElementById('modalDetailInfo').innerHTML = detailInfo;
     document.getElementById('detailModal').style.display = 'flex';
+
+    // Załaduj wykres dla waluty
+    AppState.currentChartData = { type: 'currency', code: currency.code };
+    loadAndRenderChart('currency', currency.code, 1); // Domyślnie 24h
 }
 
 function showCryptoDetails(id) {
@@ -1249,9 +1414,13 @@ function showCryptoDetails(id) {
             <span class="detail-value stat-change ${change >= 0 ? 'positive' : 'negative'}">${change > 0 ? '+' : ''}${change}%</span>
         </div>
     `;
-    
+
     document.getElementById('modalDetailInfo').innerHTML = detailInfo;
     document.getElementById('detailModal').style.display = 'flex';
+
+    // Załaduj wykres dla krypto
+    AppState.currentChartData = { type: 'crypto', code: crypto.id };
+    loadAndRenderChart('crypto', crypto.id, 1); // Domyślnie 24h
 }
 
 function closeDetailModal() {
@@ -1429,6 +1598,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initNavigation();
     initSearchAndFilter();
+    initChartPeriodButtons();
     checkOnlineStatus();
     loadDashboardData();
     
