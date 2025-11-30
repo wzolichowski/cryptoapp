@@ -166,11 +166,6 @@ function getRandomChange() {
     return (Math.random() * 4 - 2).toFixed(2);
 }
 
-
-function saveFavoritesToStorage() {
-    localStorage.setItem('favorites', JSON.stringify(AppState.favorites));
-}
-
 function isFavorite(code, type) {
     return AppState.favorites.some(f => f.code === code && f.type === type);
 }
@@ -1182,6 +1177,8 @@ function logout() {
             updateLogoutButton();
             renderProfile();
             renderFavoritesCards();
+            updateCurrencyTable();
+            updateCryptoTable();
         })
         .catch((error) => {
             console.error('Logout error:', error);
