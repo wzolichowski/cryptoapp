@@ -1097,3 +1097,62 @@ body {
         font-size: 1.5rem;
     }
 }
+
+/* =====================
+   Chart Styles
+   ===================== */
+.chart-period-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.period-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border);
+    background: white;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.period-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(30, 64, 175, 0.05);
+}
+
+.period-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.chart-container {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    position: relative;
+    height: 400px;
+}
+
+.chart-container canvas {
+    max-height: 100%;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        height: 300px;
+    }
+
+    .period-btn {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+    }
+}
