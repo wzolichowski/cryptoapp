@@ -556,36 +556,40 @@ async function loadDashboardData() {
             }
         } else {
             // Jeśli backend nie zwraca danych z poprzedniego dnia, pobierz z NBP API
+            // Używamy /last/2 aby dostać ostatnie 2 PUBLIKACJE (pomija weekendy automatycznie)
             try {
-                const today = new Date();
-                const yesterday = new Date(today);
-                yesterday.setDate(yesterday.getDate() - 1);
+                console.log('Fallback: pobieranie /last/2 z NBP...');
+                const nbpResponse = await fetch('https://api.nbp.pl/api/exchangerates/tables/A/last/2/?format=json');
+                if (nbpResponse.ok) {
+                    const nbpData = await nbpResponse.json();
 
-                // Szukaj ostatniego dnia roboczego wstecz (max 7 dni)
-                let found = false;
-                for (let i = 0; i < 7 && !found; i++) {
-                    const checkDate = new Date(today);
-                    checkDate.setDate(checkDate.getDate() - (i + 1));
-                    const dateStr = checkDate.toISOString().split('T')[0];
+                    // nbpData to tablica z 2 publikacjami: [najnowsza, poprzednia]
+                    if (Array.isArray(nbpData) && nbpData.length >= 2) {
+                        console.log(`NBP zwrócił 2 publikacje: ${nbpData[0].effectiveDate} i ${nbpData[1].effectiveDate}`);
 
-                    try {
-                        const nbpResponse = await fetch(`https://api.nbp.pl/api/exchangerates/tables/A/${dateStr}/?format=json`);
-                        if (nbpResponse.ok) {
-                            const nbpData = await nbpResponse.json();
-                            if (nbpData && nbpData[0] && Array.isArray(nbpData[0].rates)) {
-                                for (const rate of nbpData[0].rates) {
-                                    if (rate.code && typeof rate.mid === "number") {
-                                        previousRatesByCode[rate.code] = rate.mid;
-                                    }
+                        // Aktualizuj current z najnowszej publikacji
+                        if (nbpData[0] && Array.isArray(nbpData[0].rates)) {
+                            console.log(`Aktualizacja current z NBP: ${nbpData[0].effectiveDate}`);
+                            for (const rate of nbpData[0].rates) {
+                                if (rate.code && typeof rate.mid === "number") {
+                                    ratesByCode[rate.code] = rate.mid;
                                 }
-                                hasPreviousDayData = true;
-                                found = true;
-                                console.log(`Pobrano dane NBP z dnia: ${dateStr}`);
                             }
                         }
-                    } catch (e) {
-                        console.log(`Brak danych NBP dla ${dateStr}, próbuję wcześniejszy dzień...`);
+
+                        // Użyj poprzedniej publikacji jako prev
+                        if (nbpData[1] && Array.isArray(nbpData[1].rates)) {
+                            console.log(`Użycie previous z NBP: ${nbpData[1].effectiveDate}`);
+                            for (const rate of nbpData[1].rates) {
+                                if (rate.code && typeof rate.mid === "number") {
+                                    previousRatesByCode[rate.code] = rate.mid;
+                                }
+                            }
+                            hasPreviousDayData = true;
+                        }
                     }
+                } else {
+                    console.error('NBP /last/2 failed:', nbpResponse.status);
                 }
             } catch (error) {
                 console.error('Błąd pobierania danych historycznych z NBP:', error);
