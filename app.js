@@ -597,7 +597,7 @@ async function loadDashboardData() {
             return {
                 ...crypto,
                 symbol: crypto.symbol.substring(0, 3),
-                icon: crypto.icon.substring(0, 3),
+                icon: crypto.symbol.substring(0, 3),
                 pricePLN: pln,
                 priceUSD: usd,
                 change24h
