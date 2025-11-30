@@ -1,22 +1,17 @@
 TODO : ( jak pomysly macie )
 - assets, ikonki
 - zmiana avatara ?  czy wywalamy? 
-- wiecej opcji w profilu - po co sie logowac ? moze bez logowania
+- wiecej opcji w profilu 
 - wykresy - bo sa brzydki - warto żeby jakiś prosty był
-- Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute )
-- ✅ikona ( logo ) przenosi na main site
-- tryb jasny/ciemny? mamy w założeniach, u mnie lepiej odbieram apkę, która ma opcję trybu ciemnego
-- drop down z 4 walutami na głównej stronie - do czego służy?
+- Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute ) - aktualnie jest co 5 minut 
+- tryb jasny/ciemny? mamy w założeniach, u mnie lepiej odbieram apkę, która ma opcję trybu ciemnego - jak sie wyrobimy to pierdola 
+- drop down z 4 walutami na głównej stronie - do czego służy? 
 - musimy rozpisać proste user stories aplikacji to uprości wybranie i okrojenie funkcjonalności
 
 BUGI : ( zglaszajcie jak sa )
-- ✅ulubione powinny wychodzic na poczatek listy - i po odznaczeniu wracac ( poki co nie dziala nic )
-- ✅brak szczegolow po wejsciu w krypto
-- ✅haslo zagwiazdkowane zanim wgl cos wpiszesz ( to nei sap )
-- ✅ulubione nie dzialaja
+
 
 BACKLOGI: ( nowa funkcjonalnosc - ktora uwazacie ze powinna sie znalezc w aplikacji )
-- ✅na stronie glownej sa same waluty - podzielic na dwa, dodac tez krypto, usunac zakladke krypto, szczegoly powinny byc w kazdej walucie, nie tylko krypto
 
 
 
