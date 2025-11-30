@@ -525,6 +525,7 @@ async function loadDashboardData() {
         }
 
         const data = await response.json();
+        console.log('Backend data:', data);
 
         const rawRates = data?.nbp?.raw?.[0]?.rates;
         if (!Array.isArray(rawRates)) {
@@ -540,25 +541,69 @@ async function loadDashboardData() {
             }
         }
 
-        // Wczytaj poprzednie kursy z localStorage jeśli istnieją
-        if (Object.keys(AppState.previousCurrencyRates).length === 0) {
-            const savedRates = localStorage.getItem('previousCurrencyRates');
-            if (savedRates) {
-                try {
-                    AppState.previousCurrencyRates = JSON.parse(savedRates);
-                } catch (e) {
-                    AppState.previousCurrencyRates = {};
+        // Sprawdź czy backend zwraca dane z poprzedniego dnia
+        const previousDayRates = data?.nbp?.raw?.[1]?.rates;
+        let hasPreviousDayData = Array.isArray(previousDayRates);
+
+        console.log('Has previous day data from backend:', hasPreviousDayData);
+
+        let previousRatesByCode = {};
+        if (hasPreviousDayData) {
+            for (const rate of previousDayRates) {
+                if (rate.code && typeof rate.mid === "number") {
+                    previousRatesByCode[rate.code] = rate.mid;
                 }
+            }
+        } else {
+            // Jeśli backend nie zwraca danych z poprzedniego dnia, pobierz z NBP API
+            try {
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                // Szukaj ostatniego dnia roboczego wstecz (max 7 dni)
+                let found = false;
+                for (let i = 0; i < 7 && !found; i++) {
+                    const checkDate = new Date(today);
+                    checkDate.setDate(checkDate.getDate() - (i + 1));
+                    const dateStr = checkDate.toISOString().split('T')[0];
+
+                    try {
+                        const nbpResponse = await fetch(`https://api.nbp.pl/api/exchangerates/tables/A/${dateStr}/?format=json`);
+                        if (nbpResponse.ok) {
+                            const nbpData = await nbpResponse.json();
+                            if (nbpData && nbpData[0] && Array.isArray(nbpData[0].rates)) {
+                                for (const rate of nbpData[0].rates) {
+                                    if (rate.code && typeof rate.mid === "number") {
+                                        previousRatesByCode[rate.code] = rate.mid;
+                                    }
+                                }
+                                hasPreviousDayData = true;
+                                found = true;
+                                console.log(`Pobrano dane NBP z dnia: ${dateStr}`);
+                            }
+                        }
+                    } catch (e) {
+                        console.log(`Brak danych NBP dla ${dateStr}, próbuję wcześniejszy dzień...`);
+                    }
+                }
+            } catch (error) {
+                console.error('Błąd pobierania danych historycznych z NBP:', error);
             }
         }
 
         AppState.currencies = POPULAR_CURRENCIES.map(curr => {
             const currentRate = ratesByCode[curr.code] ?? 0;
-            const previousRate = AppState.previousCurrencyRates[curr.code];
-
             let change = 0;
-            if (previousRate && currentRate > 0) {
-                change = Number((((currentRate - previousRate) / previousRate) * 100).toFixed(2));
+
+            if (hasPreviousDayData && previousRatesByCode[curr.code]) {
+                const prevRate = previousRatesByCode[curr.code];
+                if (prevRate && currentRate > 0) {
+                    change = Number((((currentRate - prevRate) / prevRate) * 100).toFixed(2));
+                }
+                console.log(`${curr.code}: current=${currentRate}, prev=${prevRate}, change=${change}%`);
+            } else {
+                console.log(`${curr.code}: brak danych poprzednich`);
             }
 
             return {
@@ -567,16 +612,6 @@ async function loadDashboardData() {
                 change: change
             };
         });
-
-        // Zapisz obecne kursy jako poprzednie dla następnego razu
-        const newPreviousRates = {};
-        AppState.currencies.forEach(curr => {
-            if (curr.rate > 0) {
-                newPreviousRates[curr.code] = curr.rate;
-            }
-        });
-        AppState.previousCurrencyRates = newPreviousRates;
-        localStorage.setItem('previousCurrencyRates', JSON.stringify(newPreviousRates));
 
         const prices = data?.coingecko?.prices || {};
 
