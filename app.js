@@ -6,7 +6,8 @@ const AppState = {
     cryptos: [],
     user: null,
     lastUpdate: null,
-    favorites: []
+    favorites: [],
+    previousCurrencyRates: {}
 };
 
 
@@ -440,8 +441,8 @@ async function searchAnyCrypto(term) {
             return {
                 id: c.id,
                 name: c.name,
-                symbol: c.symbol.toUpperCase(),
-                icon: c.symbol.toUpperCase(),
+                symbol: c.symbol.toUpperCase().substring(0, 3),
+                icon: c.symbol.toUpperCase().substring(0, 3),
                 pricePLN: pln,
                 priceUSD: usd,
                 change24h
@@ -498,8 +499,8 @@ async function syncFavoriteCryptosWithPrices() {
             return {
                 id: c.id,
                 name: c.name,
-                symbol: c.symbol.toUpperCase(),
-                icon: c.symbol.toUpperCase(),
+                symbol: c.symbol.toUpperCase().substring(0, 3),
+                icon: c.symbol.toUpperCase().substring(0, 3),
                 pricePLN: c.current_price,
                 priceUSD: 0,
                 change24h
@@ -539,11 +540,43 @@ async function loadDashboardData() {
             }
         }
 
-        AppState.currencies = POPULAR_CURRENCIES.map(curr => ({
-            ...curr,
-            rate: ratesByCode[curr.code] ?? 0,
-            change: 0
-        }));
+        // Wczytaj poprzednie kursy z localStorage jeśli istnieją
+        if (Object.keys(AppState.previousCurrencyRates).length === 0) {
+            const savedRates = localStorage.getItem('previousCurrencyRates');
+            if (savedRates) {
+                try {
+                    AppState.previousCurrencyRates = JSON.parse(savedRates);
+                } catch (e) {
+                    AppState.previousCurrencyRates = {};
+                }
+            }
+        }
+
+        AppState.currencies = POPULAR_CURRENCIES.map(curr => {
+            const currentRate = ratesByCode[curr.code] ?? 0;
+            const previousRate = AppState.previousCurrencyRates[curr.code];
+
+            let change = 0;
+            if (previousRate && currentRate > 0) {
+                change = Number((((currentRate - previousRate) / previousRate) * 100).toFixed(2));
+            }
+
+            return {
+                ...curr,
+                rate: currentRate,
+                change: change
+            };
+        });
+
+        // Zapisz obecne kursy jako poprzednie dla następnego razu
+        const newPreviousRates = {};
+        AppState.currencies.forEach(curr => {
+            if (curr.rate > 0) {
+                newPreviousRates[curr.code] = curr.rate;
+            }
+        });
+        AppState.previousCurrencyRates = newPreviousRates;
+        localStorage.setItem('previousCurrencyRates', JSON.stringify(newPreviousRates));
 
         const prices = data?.coingecko?.prices || {};
 
@@ -563,6 +596,8 @@ async function loadDashboardData() {
 
             return {
                 ...crypto,
+                symbol: crypto.symbol.substring(0, 3),
+                icon: crypto.icon.substring(0, 3),
                 pricePLN: pln,
                 priceUSD: usd,
                 change24h
