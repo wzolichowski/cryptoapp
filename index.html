@@ -16,6 +16,9 @@
 
         <!-- CDN IKONY I FONT (nie działa offline) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+        <!-- Chart.js dla wykresów -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     </head>
     <body>
         <!-- Header -->
@@ -215,6 +218,21 @@
                     <div class="crypto-detail-icon" id="modalItemIcon">?</div>
                     <div class="crypto-detail-info" id="modalDetailInfo">
                         <!-- Szczegóły będą wstawiane dynamicznie -->
+                    </div>
+
+                    <!-- Przyciski wyboru okresu wykresu -->
+                    <div class="chart-period-buttons" id="chartPeriodButtons" style="display: none;">
+                        <button class="period-btn active" data-period="1">24h</button>
+                        <button class="period-btn" data-period="7">7 dni</button>
+                        <button class="period-btn" data-period="30">30 dni</button>
+                        <button class="period-btn" data-period="90">3 mies.</button>
+                        <button class="period-btn" data-period="180">6 mies.</button>
+                        <button class="period-btn" data-period="365">1 rok</button>
+                    </div>
+
+                    <!-- Wykres -->
+                    <div class="chart-container" id="chartContainer" style="display: none;">
+                        <canvas id="priceChart"></canvas>
                     </div>
                 </div>
             </div>
