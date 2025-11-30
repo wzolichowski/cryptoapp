@@ -115,50 +115,41 @@
                             </table>
                         </div>
                     </div>
-
-                    <!-- Tabela kryptowalut (w dashboardzie) -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>Kryptowaluty</h2>
-                        </div>
-                        <div class="table-container">
-                            <table class="currency-table">
-                                <thead>
-                                    <tr>
-                                        <th>Kryptowaluta</th>
-                                        <th>Symbol</th>
-                                        <th>Cena (PLN)</th>
-                                        <th>Zmiana 24h</th>
-                                        <th>Akcje</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cryptoTableBody">
-                                    <tr>
-                                        <td colspan="5" class="loading">
-                                            <div class="spinner"></div>
-                                            <p>Ładowanie kryptowalut...</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </section>
-
                 <!-- Crypto View -->
-                <section id="crypto" class="view">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>Kryptowaluty</h2>
-                        </div>
-                        <div class="crypto-grid" id="cryptoGrid">
-                            <div class="loading">
-                                <div class="spinner"></div>
-                                <p>Ładowanie kryptowalut...</p>
-                            </div>
-                        </div>
+               <section id="crypto" class="view">
+                <div id="cryptoFavoritesSection" style="display: none;">
+                    <div class="stats-grid" id="cryptoFavoritesGrid"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Kryptowaluty</h2>
                     </div>
-                </section>
+                    <div class="table-container">
+                        <table class="currency-table">
+                            <thead>
+                                <tr>
+                                    <th>Kryptowaluta</th>
+                                    <th>Symbol</th>
+                                    <th>Cena (PLN)</th>
+                                    <th>Zmiana 24h</th>
+                                    <th>Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cryptoTableBody">
+                                <tr>
+                                    <td colspan="5" class="loading">
+                                        <div class="spinner"></div>
+                                        <p>Ładowanie kryptowalut...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
 
                 <!-- Profile View -->
                 <section id="profile" class="view">
@@ -205,17 +196,22 @@
             </div>
         </div>
 
-        <!-- Scripts -->
+        <!-- Scripts: Firebase + app -->
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
         <script src="app.js"></script>
+
         <script>
-            // SW registration
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('./pwa/sw.js')
-                        .then(reg => console.log('Service Worker zarejestrowany'))
-                        .catch(err => console.log('Błąd Service Worker:', err));
-                });
-            }
+        // SW registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./pwa/sw.js')
+                .then(reg => console.log('Service Worker zarejestrowany'))
+                .catch(err => console.log('Błąd Service Worker:', err));
+        });
+        }   
         </script>
     </body>
 </html>
