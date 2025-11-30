@@ -710,8 +710,14 @@ function updateCryptoTable() {
 
 function updateLastUpdateTime() {
     const updateElement = document.getElementById('lastUpdate');
+    const cryptoUpdateElement = document.getElementById('cryptoLastUpdate');
+
     if (updateElement && AppState.lastUpdate) {
         updateElement.textContent = AppState.lastUpdate;
+    }
+
+    if (cryptoUpdateElement && AppState.lastUpdate) {
+        cryptoUpdateElement.textContent = AppState.lastUpdate;
     }
 }
 
@@ -1199,23 +1205,36 @@ function initSearchAndFilter() {
     const baseCurrencySelect = document.getElementById('baseCurrency');
     const refreshBtn = document.getElementById('refreshBtn');
     const exportBtn = document.getElementById('exportBtn');
-    
+
+    const cryptoSearchInput = document.getElementById('cryptoSearchInput');
+    const cryptoRefreshBtn = document.getElementById('cryptoRefreshBtn');
+    const cryptoExportBtn = document.getElementById('cryptoExportBtn');
+
     searchInput?.addEventListener('input', (e) => {
         filterCurrencies(e.target.value);
     });
-    
-    
+
+    cryptoSearchInput?.addEventListener('input', (e) => {
+        filterCryptos(e.target.value);
+    });
+
     baseCurrencySelect?.addEventListener('change', (e) => {
         AppState.baseCurrency = e.target.value;
         loadDashboardData();
     });
-    
+
     refreshBtn?.addEventListener('click', () => {
         showToast('Odświeżanie danych...', 'info');
         loadDashboardData();
     });
-    
+
+    cryptoRefreshBtn?.addEventListener('click', () => {
+        showToast('Odświeżanie kryptowalut...', 'info');
+        loadDashboardData();
+    });
+
     exportBtn?.addEventListener('click', exportData);
+    cryptoExportBtn?.addEventListener('click', exportCryptoData);
 }
 
 
@@ -1249,7 +1268,7 @@ function exportData() {
         ['Waluta', 'Kod', 'Kurs', 'Zmiana 24h'],
         ...AppState.currencies.map(c => [c.name, c.code, c.rate, c.change])
     ].map(row => row.join(',')).join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -1258,8 +1277,26 @@ function exportData() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
-    
+
     showToast('Dane wyeksportowane!', 'success');
+}
+
+function exportCryptoData() {
+    const csvContent = [
+        ['Kryptowaluta', 'Symbol', 'Cena PLN', 'Cena USD', 'Zmiana 24h'],
+        ...AppState.cryptos.map(c => [c.name, c.symbol, c.pricePLN, c.priceUSD, c.change24h])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `kryptowaluty_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    showToast('Kryptowaluty wyeksportowane!', 'success');
 }
 
 function checkOnlineStatus() {

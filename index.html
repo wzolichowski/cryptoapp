@@ -118,35 +118,59 @@
                 </section>
                 <!-- Crypto View -->
                <section id="crypto" class="view">
-                <div id="cryptoFavoritesSection" style="display: none;">
-                    <div class="stats-grid" id="cryptoFavoritesGrid"></div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Kryptowaluty</h2>
+                    <!-- Controls -->
+                    <div class="controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="cryptoSearchInput" placeholder="Szukaj kryptowaluty...">
+                        </div>
+
+                        <div class="filter-group">
+                            <button id="cryptoRefreshBtn" class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i>
+                                Odśwież
+                            </button>
+
+                            <button id="cryptoExportBtn" class="btn btn-secondary">
+                                <i class="fas fa-download"></i>
+                                Eksport
+                            </button>
+                        </div>
                     </div>
-                    <div class="table-container">
-                        <table class="currency-table">
-                            <thead>
-                                <tr>
-                                    <th>Kryptowaluta</th>
-                                    <th>Symbol</th>
-                                    <th>Cena (PLN)</th>
-                                    <th>Zmiana 24h</th>
-                                    <th>Akcje</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cryptoTableBody">
-                                <tr>
-                                    <td colspan="5" class="loading">
-                                        <div class="spinner"></div>
-                                        <p>Ładowanie kryptowalut...</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <!-- Ulubione kafelki -->
+                    <div id="cryptoFavoritesSection" style="display: none;">
+                        <div class="stats-grid" id="cryptoFavoritesGrid"></div>
                     </div>
-                </div>
+
+                    <!-- Tabela kryptowalut -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Kryptowaluty</h2>
+                            <span class="last-update">Ostatnia aktualizacja: <span id="cryptoLastUpdate">--</span></span>
+                        </div>
+                        <div class="table-container">
+                            <table class="currency-table">
+                                <thead>
+                                    <tr>
+                                        <th>Kryptowaluta</th>
+                                        <th>Symbol</th>
+                                        <th>Cena (PLN)</th>
+                                        <th>Zmiana 24h</th>
+                                        <th>Akcje</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cryptoTableBody">
+                                    <tr>
+                                        <td colspan="5" class="loading">
+                                            <div class="spinner"></div>
+                                            <p>Ładowanie kryptowalut...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
             </section>
 
 
