@@ -2,9 +2,12 @@ TODO : ( jak pomysly macie )
 - assets, ikonki
 - zmiana avatara ?  czy wywalamy? 
 - wiecej opcji w profilu - po co sie logowac ? moze bez logowania
-- wykresy - bo sa brzydki
+- wykresy - bo sa brzydki - warto żeby jakiś prosty był
 - Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute )
-- ✅ikona ( logo ) przenosi na main site 
+- ✅ikona ( logo ) przenosi na main site
+- tryb jasny/ciemny? mamy w założeniach, u mnie lepiej odbieram apkę, która ma opcję trybu ciemnego
+- drop down z 4 walutami na głównej stronie - do czego służy?
+- musimy rozpisać proste user stories aplikacji to uprości wybranie i okrojenie funkcjonalności
 
 BUGI : ( zglaszajcie jak sa )
 - ✅ulubione powinny wychodzic na poczatek listy - i po odznaczeniu wracac ( poki co nie dziala nic )
