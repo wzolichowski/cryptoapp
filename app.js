@@ -9,6 +9,91 @@ const AppState = {
     favorites: []
 };
 
+
+// === Firebase config & init ===
+const firebaseConfig = {
+  apiKey: "AIzaSyDcyf2rY050dlVSS6HjTbCjFGraZatPGRY",
+  authDomain: "financial-crypto-dashboard.firebaseapp.com",
+  projectId: "financial-crypto-dashboard",
+  storageBucket: "financial-crypto-dashboard.firebasestorage.app",
+  messagingSenderId: "501318964054",
+  appId: "1:501318964054:web:8a193984a849e242c13cf7",
+  measurementId: "G-J10MWNK82T"
+};
+
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+const db = firebase.firestore();
+
+function firebaseLoginEmailPassword(email, password) {
+    return auth.signInWithEmailAndPassword(email, password);
+}
+
+function firebaseRegisterEmailPassword(name, email, password) {
+    return auth.createUserWithEmailAndPassword(email, password)
+        .then((cred) => {
+            return cred.user.updateProfile({ displayName: name }).then(() => cred.user);
+        });
+}
+
+function firebaseLoginWithGoogle() {
+    return auth.signInWithPopup(googleProvider);
+}
+
+function firebaseSendPasswordResetEmail(email) {
+    return auth.sendPasswordResetEmail(email);
+}
+
+function firebaseLogout() {
+    return auth.signOut();
+}
+
+function loadFavoritesFromFirebase() {
+    if (!AppState.user || !AppState.user.uid) {
+        AppState.favorites = [];
+        renderFavoritesCards();
+        updateCurrencyTable();
+        updateCryptoTable();
+        return;
+    }
+
+    db.collection('favorites').doc(AppState.user.uid).get()
+        .then(async (doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                AppState.favorites = Array.isArray(data.items) ? data.items : [];
+            } else {
+                AppState.favorites = [];
+            }
+
+            await syncFavoriteCryptosWithPrices();
+            renderFavoritesCards();
+            updateCurrencyTable();
+            updateCryptoTable();
+        })
+        .catch((error) => {
+            console.error('Error loading favorites from Firestore:', error);
+            showToast('Nie udało się wczytać ulubionych z chmury', 'error');
+        });
+}
+
+
+function saveFavoritesToFirebase() {
+    if (!AppState.user || !AppState.user.uid) {
+        return;
+    }
+
+    db.collection('favorites').doc(AppState.user.uid).set({
+        items: AppState.favorites
+    }, { merge: true })
+    .catch((error) => {
+        console.error('Error saving favorites to Firestore:', error);
+        showToast('Nie udało się zapisać ulubionych w chmurze', 'error');
+    });
+}
+
 const FIREBASE_API_URL =
   "https://us-central1-financial-crypto-dashboard.cloudfunctions.net/getLatestRates";
 
@@ -17,6 +102,11 @@ const API_CONFIG = {
     crypto: 'https://api.coingecko.com/api/v3/simple/price',
     nbp: 'https://api.nbp.pl/api/exchangerates/tables/A/?format=json'
 };
+
+const COINGECKO_SEARCH_URL = 'https://api.coingecko.com/api/v3/search?query=';
+const COINGECKO_SIMPLE_PRICE_URL = 'https://api.coingecko.com/api/v3/simple/price';
+const COINGECKO_MARKETS_URL = 'https://api.coingecko.com/api/v3/coins/markets';
+
 
 const POPULAR_CURRENCIES = [
     { code: 'USD', name: 'Dolar amerykański', symbol: '$', flag: '🇺🇸' },
@@ -75,12 +165,6 @@ function getRandomChange() {
     return (Math.random() * 4 - 2).toFixed(2);
 }
 
-function loadFavoritesFromStorage() {
-    const saved = localStorage.getItem('favorites');
-    if (saved) {
-        AppState.favorites = JSON.parse(saved);
-    }
-}
 
 function saveFavoritesToStorage() {
     localStorage.setItem('favorites', JSON.stringify(AppState.favorites));
@@ -95,85 +179,118 @@ function toggleFavorite(code, type) {
     
     if (index >= 0) {
         AppState.favorites.splice(index, 1);
-        const name = type === 'crypto' ? 
-            AppState.cryptos.find(c => c.id === code)?.name : 
-            AppState.currencies.find(c => c.code === code)?.name;
+        const cryptoData = AppState.cryptos.find(c => c.id === code);
+        const currencyData = AppState.currencies.find(c => c.code === code);
+        const name = type === 'crypto'
+            ? cryptoData?.name
+            : currencyData?.name;
         showToast(`${name || code} usunięto z ulubionych`, 'info');
     } else {
         AppState.favorites.unshift({ code, type });
-        const name = type === 'crypto' ? 
-            AppState.cryptos.find(c => c.id === code)?.name : 
-            AppState.currencies.find(c => c.code === code)?.name;
+        const cryptoData = AppState.cryptos.find(c => c.id === code);
+        const currencyData = AppState.currencies.find(c => c.code === code);
+        const name = type === 'crypto'
+            ? cryptoData?.name
+            : currencyData?.name;
         showToast(`${name || code} dodano do ulubionych`, 'success');
+
+        if (type === 'crypto' && cryptoData) {
+            const exists = AppState.cryptos.some(c => c.id === cryptoData.id);
+            if (!exists) {
+                AppState.cryptos.push(cryptoData);
+            }
+        }
     }
     
-    saveFavoritesToStorage();
+    saveFavoritesToFirebase();
     updateCurrencyTable();
     updateCryptoTable();
     renderFavoritesCards();
 }
 
+
+
+
+
 function renderFavoritesCards() {
-    const favoritesSection = document.getElementById('favoritesSection');
-    const favoritesGrid = document.getElementById('favoritesGrid');
-    
-    if (AppState.favorites.length === 0) {
-        favoritesSection.style.display = 'none';
-        return;
-    }
-    
-    favoritesSection.style.display = 'block';
-    
-    const cards = AppState.favorites.map((fav, index) => {
-        if (fav.type === 'currency') {
-            const currency = AppState.currencies.find(c => c.code === fav.code);
-            if (!currency) return '';
-            
-            const change = parseFloat(currency.change);
-            const colors = ['blue', 'yellow', 'green', 'purple'];
-            const color = colors[index % colors.length];
-            
-            return `
-                <div class="stat-card" onclick="showDetails('${currency.code}')" style="cursor: pointer;">
-                    <div class="stat-icon stat-icon-${color}">
-                        ${currency.flag}
-                    </div>
-                    <div class="stat-content">
-                        <h3>${currency.code}/PLN</h3>
-                        <p class="stat-value">${formatNumber(currency.rate, 4)}</p>
-                        <span class="stat-change ${change >= 0 ? 'positive' : 'negative'}">
-                            ${change > 0 ? '+' : ''}${change}%
-                        </span>
-                    </div>
-                </div>
-            `;
+    const currencySection = document.getElementById('favoritesSection');
+    const currencyGrid = document.getElementById('favoritesGrid');
+    const cryptoSection = document.getElementById('cryptoFavoritesSection');
+    const cryptoGrid = document.getElementById('cryptoFavoritesGrid');
+
+    const currencyFavs = AppState.favorites.filter(f => f.type === 'currency');
+    const cryptoFavs = AppState.favorites.filter(f => f.type === 'crypto');
+
+    if (currencySection && currencyGrid) {
+        if (currencyFavs.length === 0) {
+            currencySection.style.display = 'none';
         } else {
-            const crypto = AppState.cryptos.find(c => c.id === fav.code);
-            if (!crypto) return '';
-            
-            const change = parseFloat(crypto.change24h);
-            const colors = ['blue', 'yellow', 'green', 'purple'];
-            const color = colors[index % colors.length];
-            
-            return `
-                <div class="stat-card" onclick="showCryptoDetails('${crypto.id}')" style="cursor: pointer;">
-                    <div class="stat-icon stat-icon-${color}">
-                        ${crypto.symbol}
+            currencySection.style.display = 'block';
+
+            const cards = currencyFavs.map((fav, index) => {
+                const currency = AppState.currencies.find(c => c.code === fav.code);
+                if (!currency) return '';
+
+                const change = parseFloat(currency.change);
+                const colors = ['blue', 'yellow', 'green', 'purple'];
+                const color = colors[index % colors.length];
+
+                return `
+                    <div class="stat-card" onclick="showDetails('${currency.code}')" style="cursor: pointer;">
+                        <div class="stat-icon stat-icon-${color}">
+                            ${currency.flag}
+                        </div>
+                        <div class="stat-content">
+                            <h3>${currency.code}/PLN</h3>
+                            <p class="stat-value">${formatNumber(currency.rate, 4)}</p>
+                            <span class="stat-change ${change >= 0 ? 'positive' : 'negative'}">
+                                ${change > 0 ? '+' : ''}${change}%
+                            </span>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <h3>${crypto.symbol}</h3>
-                        <p class="stat-value">${formatCurrency(crypto.pricePLN)}</p>
-                        <span class="stat-change ${change >= 0 ? 'positive' : 'negative'}">
-                            ${change > 0 ? '+' : ''}${change}%
-                        </span>
-                    </div>
-                </div>
-            `;
+                `;
+            }).join('');
+
+            currencyGrid.innerHTML = cards;
         }
-    }).join('');
-    
-    favoritesGrid.innerHTML = cards;
+    }
+
+    if (cryptoSection && cryptoGrid) {
+        if (cryptoFavs.length === 0) {
+            cryptoSection.style.display = 'none';
+        } else {
+            cryptoSection.style.display = 'block';
+
+            const cards = cryptoFavs.map((fav, index) => {
+                const crypto = AppState.cryptos.find(c => c.id === fav.code);
+
+                if (!crypto) return '';
+
+                const change = parseFloat(crypto.change24h);
+                const colors = ['blue', 'yellow', 'green', 'purple'];
+                const color = colors[index % colors.length];
+
+                return `
+                    <div class="stat-card" onclick="showCryptoDetails('${crypto.id}')" style="cursor: pointer;">
+                        <div class="stat-icon stat-icon-${color}">
+                            ${crypto.symbol}
+                        </div>
+                        <div class="stat-content">
+                            <h3>${crypto.symbol}</h3>
+                            <p class="stat-value">${formatCurrency(crypto.pricePLN)}</p>
+                            <span class="stat-change ${change >= 0 ? 'positive' : 'negative'}">
+                                ${change > 0 ? '+' : ''}${change}%
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            cryptoGrid.innerHTML = cards;
+        }
+    }
 }
+
 
 function initNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
@@ -211,13 +328,12 @@ function switchView(viewName) {
         selectedView.classList.add('active');
         AppState.currentView = viewName;
         
-        if (viewName === 'crypto') {
-            loadCryptoData();
-        } else if (viewName === 'profile') {
+        if (viewName === 'profile') {
             renderProfile();
         }
     }
 }
+
 
 async function fetchExchangeRates(base = 'PLN') {
     try {
@@ -270,6 +386,135 @@ async function fetchCryptoRates() {
         return null;
     }
 }
+
+async function searchAnyCrypto(term) {
+    const query = (term || '').trim();
+
+    // za krótki tekst → czyścimy wynik i wracamy do listy bazowej
+    if (query.length < 2) {
+        AppState.cryptoSearchResults = [];
+        renderCryptoAutocomplete([]);
+        updateCryptoTable();
+        return;
+    }
+
+    try {
+        const res = await fetch(COINGECKO_SEARCH_URL + encodeURIComponent(query));
+        if (!res.ok) {
+            throw new Error('Search request failed: ' + res.status);
+        }
+
+        const data = await res.json();
+        const coins = (data.coins || []).slice(0, 20);
+
+        if (!coins.length) {
+            AppState.cryptoSearchResults = [];
+            renderCryptoAutocomplete([]);
+            updateCryptoTable();
+
+            return;
+        }
+
+        const ids = coins.map(c => c.id).join(',');
+        const priceRes = await fetch(
+            `${COINGECKO_SIMPLE_PRICE_URL}?ids=${ids}&vs_currencies=pln,usd&include_24hr_change=true`
+        );
+        if (!priceRes.ok) {
+            throw new Error('Price request failed: ' + priceRes.status);
+        }
+
+        const priceData = await priceRes.json();
+
+        const list = coins.map(c => {
+            const p = priceData[c.id] || {};
+            const pln = typeof p.pln === 'number' ? p.pln : 0;
+            const usd = typeof p.usd === 'number' ? p.usd : 0;
+
+            let change24h = 0;
+            if (typeof p.pln_24h_change === 'number') {
+                change24h = Number(p.pln_24h_change.toFixed(2));
+            } else if (typeof p.usd_24h_change === 'number') {
+                change24h = Number(p.usd_24h_change.toFixed(2));
+            }
+
+            return {
+                id: c.id,
+                name: c.name,
+                symbol: c.symbol.toUpperCase(),
+                icon: c.symbol.toUpperCase(),
+                pricePLN: pln,
+                priceUSD: usd,
+                change24h
+            };
+        });
+
+        AppState.cryptoSearchResults = list;
+        renderCryptoAutocomplete(list);
+        updateCryptoTable();
+    } catch (err) {
+        console.error('searchAnyCrypto error:', err);
+
+        AppState.cryptoSearchResults = [];
+        renderCryptoAutocomplete([]);
+        updateCryptoTable();
+
+        showToast('Błąd wyszukiwania kryptowalut. Spróbuj ponownie za chwilę.', 'error');
+    }
+}
+
+
+async function syncFavoriteCryptosWithPrices() {
+    const favIds = AppState.favorites
+        .filter(f => f.type === 'crypto')
+        .map(f => f.code);
+
+    if (!favIds.length) return;
+
+    const existingIds = AppState.cryptos.map(c => c.id);
+    const extraIds = favIds.filter(id => !existingIds.includes(id));
+
+    if (!extraIds.length) {
+        renderFavoritesCards();
+        updateCryptoTable();
+        return;
+    }
+
+    try {
+        const url = COINGECKO_MARKETS_URL
+            + '?vs_currency=pln'
+            + '&ids=' + extraIds.join(',')
+            + '&price_change_percentage=24h';
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Coingecko markets failed');
+
+        const data = await res.json();
+
+        const extraCryptos = data.map(c => {
+            let change24h = 0;
+            if (typeof c.price_change_percentage_24h === 'number') {
+                change24h = Number(c.price_change_percentage_24h.toFixed(2));
+            }
+            return {
+                id: c.id,
+                name: c.name,
+                symbol: c.symbol.toUpperCase(),
+                icon: c.symbol.toUpperCase(),
+                pricePLN: c.current_price,
+                priceUSD: 0,
+                change24h
+            };
+        });
+
+        AppState.cryptos = [...AppState.cryptos, ...extraCryptos];
+
+        updateCryptoTable();
+        renderFavoritesCards();
+    } catch (err) {
+        console.error('syncFavoriteCryptosWithPrices error:', err);
+    }
+}
+
 
 async function loadDashboardData() {
     try {
@@ -326,6 +571,8 @@ async function loadDashboardData() {
 
         AppState.lastUpdate = new Date().toLocaleString("pl-PL");
 
+        await syncFavoriteCryptosWithPrices();
+
         updateCurrencyTable();
         updateCryptoTable();
         renderFavoritesCards();
@@ -336,6 +583,7 @@ async function loadDashboardData() {
         showToast("Błąd ładowania danych z backendu", "error");
     }
 }
+
 
 function updateCurrencyTable() {
     const tbody = document.getElementById('currencyTableBody');
@@ -399,8 +647,10 @@ function updateCurrencyTable() {
 
 function updateCryptoTable() {
     const tbody = document.getElementById('cryptoTableBody');
+
+    const source = AppState.cryptos;
     
-    if (AppState.cryptos.length === 0) {
+    if (source.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="5" class="loading">
@@ -411,7 +661,7 @@ function updateCryptoTable() {
         return;
     }
     
-    const sortedCryptos = [...AppState.cryptos].sort((a, b) => {
+    const sortedCryptos = [...source].sort((a, b) => {
         const aIsFav = isFavorite(a.id, 'crypto');
         const bIsFav = isFavorite(b.id, 'crypto');
         
@@ -457,6 +707,7 @@ function updateCryptoTable() {
     }).join('');
 }
 
+
 function updateLastUpdateTime() {
     const updateElement = document.getElementById('lastUpdate');
     if (updateElement && AppState.lastUpdate) {
@@ -464,57 +715,51 @@ function updateLastUpdateTime() {
     }
 }
 
-async function loadCryptoData() {
-    const cryptoGrid = document.getElementById('cryptoGrid');
-    cryptoGrid.innerHTML = '<div class="loading"><div class="spinner"></div><p>Ładowanie...</p></div>';
-    
-    const rates = await fetchCryptoRates();
-    
-    if (!rates) {
-        cryptoGrid.innerHTML = '<div class="loading"><p>Błąd ładowania danych</p></div>';
+
+
+function renderCryptoAutocomplete(list) {
+    const box = document.getElementById('cryptoAutocomplete');
+    if (!list || list.length === 0) {
+        box.style.display = 'none';
+        box.innerHTML = '';
         return;
     }
-    
-    AppState.cryptos = POPULAR_CRYPTOS.map(crypto => ({
-        ...crypto,
-        pricePLN: rates[crypto.id]?.pln || 0,
-        priceUSD: rates[crypto.id]?.usd || 0,
-        change24h: typeof rates[crypto.id]?.pln_24h_change !== 'undefined'
-            ? Number(rates[crypto.id].pln_24h_change.toFixed(2))
-            : (typeof rates[crypto.id]?.usd_24h_change !== 'undefined'
-                ? Number(rates[crypto.id].usd_24h_change.toFixed(2))
-                : getRandomChange())
-    }));
-    
-    renderCryptoGrid();
+
+    box.style.display = 'block';
+    box.innerHTML = list.map(c => `
+        <div class="autocomplete-item" onclick="selectCryptoAutocomplete('${c.id}')">
+            <span>${c.name}</span>
+            <span>${c.symbol.toUpperCase()}</span>
+        </div>
+    `).join('');
 }
 
-function renderCryptoGrid() {
-    const cryptoGrid = document.getElementById('cryptoGrid');
-    
-    cryptoGrid.innerHTML = AppState.cryptos.map(crypto => {
-        const change = parseFloat(crypto.change24h);
-        const changeClass = change >= 0 ? 'positive' : 'negative';
-        
-        return `
-            <div class="crypto-card" onclick="showCryptoDetails('${crypto.id}')">
-                <div class="crypto-header">
-                    <div class="crypto-icon">${crypto.icon}</div>
-                    <div class="crypto-info">
-                        <h3>${crypto.name}</h3>
-                        <span class="crypto-code">${crypto.symbol}</span>
-                    </div>
-                </div>
-                <div class="crypto-price">
-                    ${formatCurrency(crypto.pricePLN)}
-                </div>
-                <div class="stat-change ${changeClass}">
-                    ${change > 0 ? '+' : ''}${change}% (24h)
-                </div>
-            </div>
-        `;
-    }).join('');
+function selectCryptoAutocomplete(id) {
+    const crypto =
+        AppState.cryptoSearchResults.find(c => c.id === id) ||
+        AppState.cryptos.find(c => c.id === id);
+
+    if (!crypto) return;
+
+    const box = document.getElementById('cryptoAutocomplete');
+    if (box) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+    }
+
+    const input = document.getElementById('cryptoSearchInput');
+    if (input) {
+        input.value = `${crypto.name} (${crypto.symbol})`;
+    }
+
+    const row = document.querySelector(`tr[data-crypto="${crypto.id}"]`);
+    if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.classList.add('highlight-row');
+        setTimeout(() => row.classList.remove('highlight-row'), 1500);
+    }
 }
+
 
 function renderProfile() {
     const profileContent = document.getElementById('profileContent');
@@ -587,8 +832,15 @@ function updateLogoutButton() {
 }
 
 function handleGoogleLogin() {
-    // TODO: Zastąpić Firebase Auth signInWithPopup()
-    showToast('Logowanie przez Google będzie dostępne wkrótce', 'info');
+    firebaseLoginWithGoogle()
+        .then((result) => {
+            const user = result.user;
+            showToast('Zalogowano przez Google jako ' + (user.displayName || user.email), 'success');
+        })
+        .catch((error) => {
+            console.error('Google login error:', error);
+            showToast('Błąd logowania Google: ' + (error.message || 'spróbuj ponownie'), 'error');
+        });
 }
 
 function showLoginForm() {
@@ -745,43 +997,62 @@ function handleForgotPassword(event) {
     
     const email = document.getElementById('resetEmail').value;
     
-    // TODO: Zastąpić Firebase Auth sendPasswordResetEmail()
-    if (email) {
-        showToast('Link do resetowania hasła został wysłany na ' + email, 'success');
-        
-        setTimeout(() => {
-            showLoginForm();
-        }, 2000);
+    if (!email) {
+        showToast('Podaj adres e-mail', 'error');
+        return;
     }
+
+    auth
+        .sendPasswordResetEmail(email)
+        .then(() => {
+            showToast('Link do resetowania hasła został wysłany na ' + email, 'success');
+            setTimeout(() => {
+                showLoginForm();
+            }, 2000);
+        })
+        .catch((error) => {
+            console.error('Reset password error:', error);
+            showToast('Błąd resetowania hasła: ' + (error.message || 'spróbuj ponownie'), 'error');
+        });
 }
+
+
 
 function handleLogin(event) {
     event.preventDefault();
     
-    const email = document.getElementById('loginEmail').value;
+    const email    = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
-    // TODO: Zastąpić Firebase Auth
-    if (email && password) {
-        AppState.user = {
-            name: email.split('@')[0],
-            email: email
-        };
-        
-        showToast('Zalogowano pomyślnie!', 'success');
-        renderProfile();
-        updateLogoutButton();
-        localStorage.setItem('user', JSON.stringify(AppState.user));
-    }
+    auth.signInWithEmailAndPassword(email, password)
+        .then((cred) => {
+            const user = cred.user;
+            AppState.user = {
+                name: user.displayName || (user.email ? user.email.split('@')[0] : 'Użytkownik'),
+                email: user.email,
+                uid: user.uid,
+                photoURL: user.photoURL || null,
+            };
+            
+            showToast('Zalogowano pomyślnie!', 'success');
+            renderProfile();
+            updateLogoutButton();
+            loadFavoritesFromFirebase();
+        })
+        .catch((error) => {
+            console.error('Firebase login error:', error);
+            showToast('Błąd logowania: ' + (error.message || 'spróbuj ponownie'), 'error');
+        });
 }
+
 
 function handleRegister(event) {
     event.preventDefault();
     
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+    const name             = document.getElementById('registerName').value;
+    const email            = document.getElementById('registerEmail').value;
+    const password         = document.getElementById('registerPassword').value;
+    const passwordConfirm  = document.getElementById('registerPasswordConfirm').value;
     
     if (password !== passwordConfirm) {
         showToast('Hasła nie są identyczne!', 'error');
@@ -793,30 +1064,52 @@ function handleRegister(event) {
         return;
     }
     
-    // TODO: Zastąpić Firebase Auth
-    if (name && email && password) {
-        AppState.user = {
-            name: name,
-            email: email
-        };
-        
-        showToast('Konto utworzone! Witaj ' + name + '! 🎉', 'success');
-        renderProfile();
-        updateLogoutButton();
-        localStorage.setItem('user', JSON.stringify(AppState.user));
-    }
+    auth.createUserWithEmailAndPassword(email, password)
+        .then((cred) => {
+            const user = cred.user;
+            return user.updateProfile({ displayName: name }).then(() => user);
+        })
+        .then((user) => {
+            AppState.user = {
+                name: user.displayName || name,
+                email: user.email,
+                uid: user.uid,
+                photoURL: user.photoURL || null,
+            };
+            
+            showToast('Konto utworzone! Witaj ' + AppState.user.name + '! 🎉', 'success');
+            renderProfile();
+            updateLogoutButton();
+
+           
+            return db.collection('favorites').doc(user.uid).set({
+                items: []
+            }, { merge: true });
+        })
+        .catch((error) => {
+            console.error('Firebase register error:', error);
+            showToast('Błąd rejestracji: ' + (error.message || 'spróbuj ponownie'), 'error');
+        });
 }
 
+
 function logout() {
-    AppState.user = null;
-    localStorage.removeItem('user');
-    showToast('Wylogowano', 'info');
-    updateLogoutButton();
-    
-    setTimeout(() => {
-        location.reload();
-    }, 500);
+    auth.signOut()
+        .then(() => {
+            AppState.user = null;
+            AppState.favorites = [];
+            showToast('Wylogowano', 'info');
+            updateLogoutButton();
+            renderProfile();
+            renderFavoritesCards();
+        })
+        .catch((error) => {
+            console.error('Logout error:', error);
+            showToast('Błąd wylogowania: ' + (error.message || 'spróbuj ponownie'), 'error');
+        });
 }
+
+
 
 function showDetails(code) {
     const currency = AppState.currencies.find(c => c.code === code);
@@ -851,6 +1144,7 @@ function showDetails(code) {
 
 function showCryptoDetails(id) {
     const crypto = AppState.cryptos.find(c => c.id === id);
+
     if (!crypto) return;
     
     document.getElementById('modalItemName').textContent = crypto.name;
@@ -910,6 +1204,7 @@ function initSearchAndFilter() {
         filterCurrencies(e.target.value);
     });
     
+    
     baseCurrencySelect?.addEventListener('change', (e) => {
         AppState.baseCurrency = e.target.value;
         loadDashboardData();
@@ -923,6 +1218,10 @@ function initSearchAndFilter() {
     exportBtn?.addEventListener('click', exportData);
 }
 
+
+
+
+
 function filterCurrencies(searchTerm) {
     const rows = document.querySelectorAll('#currencyTableBody tr');
     const term = (searchTerm || '').toLowerCase();
@@ -932,6 +1231,18 @@ function filterCurrencies(searchTerm) {
         row.style.display = text.includes(term) ? '' : 'none';
     });
 }
+
+function filterCryptos(searchTerm) {
+    const rows = document.querySelectorAll('#cryptoTableBody tr');
+    const term = (searchTerm || '').toLowerCase();
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+    });
+}
+
+
 
 function exportData() {
     const csvContent = [
@@ -969,23 +1280,46 @@ function checkOnlineStatus() {
     window.addEventListener('offline', updateStatus);
 }
 
-function loadUserFromStorage() {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-        AppState.user = JSON.parse(savedUser);
+document.addEventListener('click', (e) => {
+    const box = document.getElementById('cryptoAutocomplete');
+    const input = document.getElementById('cryptoSearchInput');
+    if (!box || !input) return;
+    if (!box.contains(e.target) && e.target !== input) {
+        box.style.display = 'none';
     }
-}
+});
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initiation');
-    
-    loadUserFromStorage();
-    loadFavoritesFromStorage();
+
+    auth.onAuthStateChanged((user) => {
+    if (user) {
+        AppState.user = {
+            name: user.displayName || (user.email ? user.email.split('@')[0] : 'Użytkownik'),
+            email: user.email || '',
+            photoURL: user.photoURL || null,
+            uid: user.uid
+        };
+        loadFavoritesFromFirebase();
+    } else {
+        AppState.user = null;
+        AppState.favorites = [];
+        renderFavoritesCards();
+    }
+
+    updateLogoutButton();
+
+    if (AppState.currentView === 'profile') {
+        renderProfile();
+    }
+});
+
     initNavigation();
     initSearchAndFilter();
     checkOnlineStatus();
     loadDashboardData();
-    updateLogoutButton();
     
     setInterval(() => {
         if (AppState.currentView === 'dashboard') {
@@ -993,5 +1327,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 5 * 60 * 1000);
     
-    console.log('All set!')
+    console.log('All set!');
 });
