@@ -70,7 +70,7 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 | **Oliwia Charyk**        | Project Manager – koordynacja, raportowanie, komunikacja |
 | **Karolina Sosińska**    | Tester QA – testy manualne, automatyczne (pytest, Selenium), PWA |
 | **Tomasz Wojtuń**        | Backend Developer – Flask, logowanie, baza danych, CoinGecko |
-| **Wojciech Zolichowski** | Frontend Developer – HTML, CSS, JS, CI/CD |
+| **Wojciech Zolichowski** | Frontend Developer, API, Azure 
 
 ---
 
