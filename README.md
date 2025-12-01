@@ -2,8 +2,9 @@ TODO : ( jak pomysly macie )
 - favicon
 - zmiana avatara ?  czy wywalamy? 
 - wiecej opcji w profilu 
-- drop down z 4 walutami na głównej stronie - do czego służy? - o co chodzi?
-- musimy rozpisać proste user stories aplikacji to uprości wybranie i okrojenie funkcjonalności
+
+- zmiana czcionki w trybie ciemnym z czarnego na jaśniejszy (okno rejestracja konta)
+
 
 BUGI : ( zglaszajcie jak sa )
 
@@ -23,9 +24,9 @@ Projekt został zrealizowany w ramach zespołowego projektu studenckiego.
 
 Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów walut FIAT i kryptowalut**, które:
 - zapewnia szybki dostęp do aktualnych i historycznych danych,
-- umożliwia filtrowanie wyników po dacie i walucie,
-- prezentuje trendy kursowe w formie wykresów,
-- pozwala eksportować dane do plików CSV/XLSX
+- umożliwia filtrowanie wyników po przedziale czasowym i walucie,
+- prezentuje trendy kursowe w formie wykresu,
+- pozwala eksportować dane do pliku CSV
 - wspiera logowanie, autoryzację
 - działa w trybie offline jako aplikacja PWA.
 
@@ -42,16 +43,15 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 - ✅ **Logowanie i rejestracja** użytkowników  
 - ✅ **Autoryzacja** i obsługa sesji  
 - ✅ **Filtrowanie danych** po walucie i zakresie dat  
-- ✅ **Tabela + wykres liniowy** trendów kursów  
+- ✅ **Tabela + wykres liniowy** trendów kursów
+- ✅ **Panel analityczny walut**  
 - ✅ **Ulubione waluty** (dodawanie/usuwanie)  
-- ✅ **Eksport danych** do CSV/XLSX  
+- ✅ **Eksport danych** do CSV
 - ✅ **Tryb jasny/ciemny**  
 - ✅ **Obsługa PWA**  
-- ✅ **Responsywny interfejs (RWD)**  
+- ✅ **Responsywny interfejs (RWD)**
 
 ### 🚧 Wersja docelowa
-- 💰 Integracja z API kryptowalut (CoinGecko)  
-- 📈 Dashboard analityczny (wskaźniki: średni, min, max, zmiana %)  
 - 🔔 Powiadomienia push / alerty walutowe  
 - 🧠 Udoskonalony UX/UI i testy automatyczne  ( czy przy html css js mozna nazwac udoskonalonym? )
 
@@ -61,7 +61,7 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 
 | Imię i nazwisko       | Rola / Zakres                                                                 |
 |------------------------|-------------------------------------------------------------------------------|
-| **Aleksandra Zbierańska** | Architekt rozwiązania – MVP, integracja z API NBP, dokumentacja |
+| **Aleksandra Zbierańska** | Koncepcja pierwotnej aplikacji, integracja z API NBP, dokumentacja |
 | **Oliwia Charyk**        | Project Manager – koordynacja, raportowanie, komunikacja |
 | **Karolina Sosińska**    | Tester QA – testy manualne, automatyczne (pytest, Selenium), PWA |
 | **Tomasz Wojtuń**        | Backend Developer – Flask, logowanie, baza danych, CoinGecko |
