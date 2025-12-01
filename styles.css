@@ -902,25 +902,32 @@ body.dark-mode .btn-google:hover {
 
 .avatar-edit-btn {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 36px;
-    height: 36px;
+    bottom: 5px;
+    right: 5px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: var(--primary);
-    color: white;
-    border: 3px solid var(--bg-primary);
+    background: white;
+    color: var(--primary);
+    border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .avatar-edit-btn:hover {
-    background: var(--primary-dark);
-    transform: scale(1.1);
+    background: var(--primary);
+    color: white;
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+}
+
+.avatar-edit-btn:active {
+    transform: scale(0.95);
 }
 
 /* Profile Settings */

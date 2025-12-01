@@ -1275,6 +1275,10 @@ function showChangeEmailForm() {
     const modalName = document.getElementById('modalItemName');
     const modalBody = document.querySelector('.modal-body');
 
+    // Wyłącz grid layout dla formularzy
+    modalBody.style.display = 'block';
+    modalBody.style.gridTemplateColumns = 'none';
+
     modalName.textContent = 'Zmień adres email';
     modalBody.innerHTML = `
         <div style="width: 100%; max-width: 400px; margin: 0 auto;">
@@ -1350,6 +1354,10 @@ function showChangePasswordForm() {
     const modal = document.getElementById('detailModal');
     const modalName = document.getElementById('modalItemName');
     const modalBody = document.querySelector('.modal-body');
+
+    // Wyłącz grid layout dla formularzy
+    modalBody.style.display = 'block';
+    modalBody.style.gridTemplateColumns = 'none';
 
     modalName.textContent = 'Zmień hasło';
     modalBody.innerHTML = `
@@ -1436,6 +1444,10 @@ function confirmDeleteAccount() {
     const modal = document.getElementById('detailModal');
     const modalName = document.getElementById('modalItemName');
     const modalBody = document.querySelector('.modal-body');
+
+    // Wyłącz grid layout dla formularzy
+    modalBody.style.display = 'block';
+    modalBody.style.gridTemplateColumns = 'none';
 
     modalName.textContent = 'Usuń konto';
     modalBody.innerHTML = `
