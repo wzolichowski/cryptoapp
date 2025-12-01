@@ -909,7 +909,7 @@ body {
     background: var(--bg-primary);
     border-radius: var(--radius);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 500px;
+    max-width: 1100px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
@@ -959,6 +959,28 @@ body {
 
 .modal-body {
     padding: 2rem 1.5rem;
+}
+
+/* Modal body - layout 2-kolumnowy */
+.modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Lewa kolumna - info */
+.modal-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Prawa kolumna - wykres */
+.modal-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .crypto-detail-icon {
