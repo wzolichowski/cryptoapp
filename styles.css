@@ -1089,56 +1089,70 @@ body.dark-mode .btn-google:hover {
    ===================== */
 @media (max-width: 768px) {
     .header-content {
-        flex-direction: column;
-        gap: 1rem;
+        gap: 0.5rem;
     }
-    
+
+    /* Ukryj tekst logo na mobile */
+    .logo h1 {
+        display: none;
+    }
+
+    .logo i {
+        font-size: 1.5rem;
+    }
+
+    /* Zmniejsz theme toggle na mobile */
+    .theme-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        margin-left: 0.5rem;
+    }
+
     .nav {
-        width: 100%;
-        justify-content: space-between;
+        gap: 0.25rem;
     }
-    
+
     .nav-btn span {
         display: none;
     }
-    
+
     .nav-btn {
-        flex: 1;
-        justify-content: center;
-        padding: 0.75rem;
+        padding: 0.65rem 0.85rem;
+        font-size: 1.1rem;
     }
-    
+
     .controls {
         flex-direction: column;
     }
-    
+
     .filter-group {
         width: 100%;
         flex-direction: column;
     }
-    
+
     .select, .btn {
         width: 100%;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .card-header {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .currency-table {
         font-size: 0.875rem;
     }
-    
+
     .currency-table th,
     .currency-table td {
         padding: 0.75rem 0.5rem;
     }
-    
+
     .toast {
         right: 1rem;
         left: 1rem;
