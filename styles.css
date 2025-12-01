@@ -689,6 +689,18 @@ body {
     transition: var(--transition);
 }
 
+/* Fix dla dark mode - zawsze ciemny tekst na białym tle */
+body.dark-mode .btn-google {
+    background: white;
+    color: #1e293b;
+    border-color: #e2e8f0;
+}
+
+body.dark-mode .btn-google:hover {
+    background: #f8fafc;
+    color: #1e293b;
+}
+
 .btn-google:hover {
     background: var(--bg-secondary);
     border-color: var(--text-secondary);
