@@ -2,8 +2,6 @@ TODO : ( jak pomysly macie )
 - favicon
 - zmiana avatara ?  czy wywalamy? 
 - wiecej opcji w profilu 
-- Po dodaniu API cen ustawic odswieezanie live ( lub chociaz co minute ) - aktualnie jest co 5 minut 
-- tryb jasny/ciemny? mamy w założeniach, u mnie lepiej odbieram apkę, która ma opcję trybu ciemnego - jak sie wyrobimy to pierdola 
 - drop down z 4 walutami na głównej stronie - do czego służy? - o co chodzi?
 - musimy rozpisać proste user stories aplikacji to uprości wybranie i okrojenie funkcjonalności
 
@@ -11,7 +9,6 @@ BUGI : ( zglaszajcie jak sa )
 
 
 FEATURES :
-- Tryb ciemny / jasny
 
 
 
