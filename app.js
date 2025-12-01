@@ -841,22 +841,70 @@ function selectCryptoAutocomplete(id) {
 function renderProfile() {
     const profileContent = document.getElementById('profileContent');
     updateLogoutButton();
-    
+
     if (AppState.user) {
         profileContent.innerHTML = `
             <div class="user-profile">
                 <div class="user-avatar">
-                    ${AppState.user.photoURL ? 
-                        `<img src="${AppState.user.photoURL}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` : 
+                    ${AppState.user.photoURL ?
+                        `<img src="${AppState.user.photoURL}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` :
                         `<i class="fas fa-user"></i>`
                     }
                 </div>
                 <h2>${AppState.user.name}</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 1rem;">${AppState.user.email}</p>
-                <p style="color: var(--text-light); font-size: 0.875rem;">
-                    <i class="fas fa-info-circle"></i>
-                    Użyj przycisku "Wyloguj" w górnym menu, aby się wylogować
-                </p>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">${AppState.user.email}</p>
+
+                <!-- Zarządzanie kontem -->
+                <div class="profile-settings">
+                    <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
+                        <i class="fas fa-cog"></i> Ustawienia konta
+                    </h3>
+                    <div class="settings-list">
+                        <button class="setting-item" onclick="showChangeEmailForm()">
+                            <div class="setting-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-title">Zmień email</div>
+                                <div class="setting-desc">Zaktualizuj swój adres email</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+
+                        <button class="setting-item" onclick="showChangePasswordForm()">
+                            <div class="setting-icon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-title">Zmień hasło</div>
+                                <div class="setting-desc">Zaktualizuj swoje hasło</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+
+                        <button class="setting-item" onclick="changeProfilePhoto()">
+                            <div class="setting-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-title">Zmień zdjęcie</div>
+                                <div class="setting-desc">Zaktualizuj swoje zdjęcie profilowe</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+
+                        <button class="setting-item danger" onclick="confirmDeleteAccount()">
+                            <div class="setting-icon">
+                                <i class="fas fa-trash-alt"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-title">Usuń konto</div>
+                                <div class="setting-desc">Trwale usuń swoje konto i dane</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
     } else {
@@ -1189,6 +1237,360 @@ function logout() {
 }
 
 // ===========================
+// ZARZĄDZANIE KONTEM
+// ===========================
+
+// Zmiana zdjęcia profilowego
+function changeProfilePhoto() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Sprawdź rozmiar (max 5MB - zostanie skompresowany)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Plik jest za duży! Maksymalny rozmiar to 5MB', 'error');
+            return;
+        }
+
+        try {
+            // Kompresuj obraz przed zapisem
+            const compressedBase64 = await compressImage(file, 800, 800, 0.8);
+
+            const user = auth.currentUser;
+
+            // Zapisz w Firestore (base64 skompresowanego obrazu)
+            await db.collection('users').doc(user.uid).set({
+                photoURL: compressedBase64,
+                email: user.email,
+                displayName: user.displayName
+            }, { merge: true });
+
+            AppState.user.photoURL = compressedBase64;
+            showToast('Zdjęcie profilowe zaktualizowane!', 'success');
+            renderProfile();
+        } catch (error) {
+            console.error('Error updating photo:', error);
+            showToast('Błąd aktualizacji zdjęcia: ' + error.message, 'error');
+        }
+    };
+    input.click();
+}
+
+// Funkcja kompresji obrazu
+function compressImage(file, maxWidth, maxHeight, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                // Oblicz nowe wymiary zachowując proporcje
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = height * (maxWidth / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = width * (maxHeight / height);
+                        height = maxHeight;
+                    }
+                }
+
+                // Utwórz canvas i narysuj przeskalowany obraz
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Konwertuj do base64 z kompresją
+                const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                resolve(compressedBase64);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Zmiana email
+function showChangeEmailForm() {
+    const modal = document.getElementById('detailModal');
+    const modalName = document.getElementById('modalItemName');
+    const modalBody = document.querySelector('.modal-body');
+
+    // Wyłącz grid layout dla formularzy
+    modalBody.style.display = 'block';
+    modalBody.style.gridTemplateColumns = 'none';
+
+    modalName.textContent = 'Zmień adres email';
+    modalBody.innerHTML = `
+        <div style="width: 100%; max-width: 400px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Wprowadź nowy adres email i potwierdź zmianę swoim aktualnym hasłem</p>
+            </div>
+            <form onsubmit="handleChangeEmail(event)">
+                <div class="form-group">
+                    <label for="newEmail">
+                        <i class="fas fa-envelope"></i>
+                        Nowy adres email
+                    </label>
+                    <input type="email" id="newEmail" required placeholder="nowy@email.com" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">
+                        <i class="fas fa-lock"></i>
+                        Aktualne hasło
+                    </label>
+                    <input type="password" id="confirmPassword" required placeholder="Wprowadź hasło">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" style="margin-top: 1.5rem;">
+                    <i class="fas fa-check"></i>
+                    Zmień email
+                </button>
+                <button type="button" class="btn btn-secondary btn-full" onclick="closeDetailModal()" style="margin-top: 0.75rem;">
+                    Anuluj
+                </button>
+            </form>
+        </div>
+    `;
+    modal.style.display = 'flex';
+}
+
+async function handleChangeEmail(event) {
+    event.preventDefault();
+
+    const newEmail = document.getElementById('newEmail').value;
+    const password = document.getElementById('confirmPassword').value;
+    const user = auth.currentUser;
+
+    if (!user) {
+        showToast('Musisz być zalogowany, aby zmienić email', 'error');
+        return;
+    }
+
+    try {
+        const credential = firebase.auth.EmailAuthProvider.credential(
+            user.email,
+            password
+        );
+        await user.reauthenticateWithCredential(credential);
+        await user.verifyBeforeUpdateEmail(newEmail);
+
+        showToast(
+            'Na nowy adres został wysłany link potwierdzający. Kliknij go, aby dokończyć zmianę emaila.',
+            'success'
+        );
+        closeDetailModal();
+
+    } catch (error) {
+        console.error('Error changing email:', error);
+        console.log('error.code:', error.code, 'error.message:', error.message);
+
+        let msg = 'Błąd zmiany email';
+
+        if (error.code === 'auth/wrong-password') {
+            msg = 'Nieprawidłowe hasło';
+        } else if (error.code === 'auth/email-already-in-use') {
+            msg = 'Ten email jest już używany';
+        } else if (error.code === 'auth/invalid-email') {
+            msg = 'Nieprawidłowy format adresu email';
+        } else if (error.code === 'auth/requires-recent-login') {
+            msg = 'Zaloguj się ponownie i spróbuj jeszcze raz.';
+        } else if (error.code === 'auth/operation-not-allowed') {
+            msg = 'Zmiana emaila wymaga potwierdzenia nowego adresu. Sprawdź swoją skrzynkę.';
+        }
+
+        showToast(msg, 'error');
+    }
+}
+
+
+// Zmiana hasła
+function showChangePasswordForm() {
+    const modal = document.getElementById('detailModal');
+    const modalName = document.getElementById('modalItemName');
+    const modalBody = document.querySelector('.modal-body');
+
+    // Wyłącz grid layout dla formularzy
+    modalBody.style.display = 'block';
+    modalBody.style.gridTemplateColumns = 'none';
+
+    modalName.textContent = 'Zmień hasło';
+    modalBody.innerHTML = `
+        <div style="width: 100%; max-width: 400px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                    <i class="fas fa-key"></i>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Zabezpiecz swoje konto nowym hasłem. Minimum 6 znaków.</p>
+            </div>
+            <form onsubmit="handleChangePassword(event)">
+                <div class="form-group">
+                    <label for="currentPassword">
+                        <i class="fas fa-lock"></i>
+                        Aktualne hasło
+                    </label>
+                    <input type="password" id="currentPassword" required placeholder="Twoje obecne hasło" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">
+                        <i class="fas fa-key"></i>
+                        Nowe hasło
+                    </label>
+                    <input type="password" id="newPassword" required placeholder="Minimum 6 znaków" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword">
+                        <i class="fas fa-check"></i>
+                        Potwierdź nowe hasło
+                    </label>
+                    <input type="password" id="confirmNewPassword" required placeholder="Powtórz nowe hasło">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" style="margin-top: 1.5rem;">
+                    <i class="fas fa-check"></i>
+                    Zmień hasło
+                </button>
+                <button type="button" class="btn btn-secondary btn-full" onclick="closeDetailModal()" style="margin-top: 0.75rem;">
+                    Anuluj
+                </button>
+            </form>
+        </div>
+    `;
+    modal.style.display = 'flex';
+}
+
+async function handleChangePassword(event) {
+    event.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+    const user = auth.currentUser;
+
+    // Sprawdź czy nowe hasła się zgadzają
+    if (newPassword !== confirmNewPassword) {
+        showToast('Nowe hasła nie są identyczne!', 'error');
+        return;
+    }
+
+    try {
+        // Re-authenticate user
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+        await user.reauthenticateWithCredential(credential);
+
+        // Update password
+        await user.updatePassword(newPassword);
+
+        showToast('Hasło zaktualizowane pomyślnie!', 'success');
+        closeDetailModal();
+    } catch (error) {
+        console.error('Error changing password:', error);
+        let errorMsg = 'Błąd zmiany hasła';
+        if (error.code === 'auth/wrong-password') {
+            errorMsg = 'Nieprawidłowe aktualne hasło';
+        } else if (error.code === 'auth/weak-password') {
+            errorMsg = 'Hasło jest za słabe';
+        }
+        showToast(errorMsg, 'error');
+    }
+}
+
+// Usuwanie konta
+function confirmDeleteAccount() {
+    const modal = document.getElementById('detailModal');
+    const modalName = document.getElementById('modalItemName');
+    const modalBody = document.querySelector('.modal-body');
+
+    // Wyłącz grid layout dla formularzy
+    modalBody.style.display = 'block';
+    modalBody.style.gridTemplateColumns = 'none';
+
+    modalName.textContent = 'Usuń konto';
+    modalBody.innerHTML = `
+        <div style="width: 100%; max-width: 400px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 style="color: var(--danger); margin-bottom: 1rem; font-size: 1.5rem;">Czy na pewno?</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                    Ta operacja jest <strong>nieodwracalna</strong>. Twoje konto i wszystkie dane zostaną trwale usunięte.
+                </p>
+            </div>
+            <form onsubmit="handleDeleteAccount(event)">
+                <div class="form-group">
+                    <label for="deletePassword">
+                        <i class="fas fa-lock"></i>
+                        Potwierdź hasłem
+                    </label>
+                    <input type="password" id="deletePassword" required placeholder="Wprowadź swoje hasło" autofocus>
+                </div>
+                <button type="submit" class="btn btn-full" style="margin-top: 1.5rem; background: var(--danger); color: white;">
+                    <i class="fas fa-trash-alt"></i>
+                    Usuń moje konto
+                </button>
+                <button type="button" class="btn btn-secondary btn-full" onclick="closeDetailModal()" style="margin-top: 0.75rem;">
+                    Anuluj
+                </button>
+            </form>
+        </div>
+    `;
+    modal.style.display = 'flex';
+}
+
+async function handleDeleteAccount(event) {
+    event.preventDefault();
+
+    const password = document.getElementById('deletePassword').value;
+    const user = auth.currentUser;
+
+    try {
+        // Re-authenticate user
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        await user.reauthenticateWithCredential(credential);
+
+        // Usuń ulubione z Firestore
+        if (AppState.user && AppState.user.uid) {
+            await db.collection('favorites').doc(AppState.user.uid).delete();
+        }
+
+        // Delete account
+        await user.delete();
+
+        AppState.user = null;
+        AppState.favorites = [];
+        showToast('Konto zostało usunięte', 'info');
+        closeDetailModal();
+        renderProfile();
+        updateLogoutButton();
+        renderFavoritesCards();
+        updateCurrencyTable();
+        updateCryptoTable();
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        let errorMsg = 'Błąd usuwania konta';
+        if (error.code === 'auth/wrong-password') {
+            errorMsg = 'Nieprawidłowe hasło';
+        } else if (error.code === 'auth/requires-recent-login') {
+            errorMsg = 'Zaloguj się ponownie i spróbuj jeszcze raz';
+        }
+        showToast(errorMsg, 'error');
+    }
+}
+
+// ===========================
 // WYKRESY - Funkcje pomocnicze
 // ===========================
 
@@ -1446,7 +1848,6 @@ window.addEventListener('keydown', (e) => {
 
 function initSearchAndFilter() {
     const searchInput = document.getElementById('searchInput');
-    const baseCurrencySelect = document.getElementById('baseCurrency');
     const refreshBtn = document.getElementById('refreshBtn');
     const exportBtn = document.getElementById('exportBtn');
 
@@ -1460,11 +1861,6 @@ function initSearchAndFilter() {
 
     cryptoSearchInput?.addEventListener('input', (e) => {
         filterCryptos(e.target.value);
-    });
-
-    baseCurrencySelect?.addEventListener('change', (e) => {
-        AppState.baseCurrency = e.target.value;
-        loadDashboardData();
     });
 
     refreshBtn?.addEventListener('click', () => {
@@ -1570,17 +1966,63 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// =====================
+// Dark Mode
+// =====================
+function toggleDarkMode() {
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    const icon = themeToggle.querySelector('i');
 
+    body.classList.toggle('dark-mode');
+
+    // Zmień ikonę
+    if (body.classList.contains('dark-mode')) {
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+        localStorage.setItem('darkMode', 'enabled');
+    } else {
+        icon.classList.remove('fa-sun');
+        icon.classList.add('fa-moon');
+        localStorage.setItem('darkMode', 'disabled');
+    }
+}
+
+function initDarkMode() {
+    const darkMode = localStorage.getItem('darkMode');
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    const icon = themeToggle?.querySelector('i');
+
+    if (darkMode === 'enabled') {
+        body.classList.add('dark-mode');
+        if (icon) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        }
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initiation');
 
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(async (user) => {
     if (user) {
+        // Wczytaj photoURL z Firestore (base64 zapisane tam zamiast w Auth)
+        let photoURL = user.photoURL || null;
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists && userDoc.data().photoURL) {
+                photoURL = userDoc.data().photoURL;
+            }
+        } catch (error) {
+            console.error('Error loading photo from Firestore:', error);
+        }
+
         AppState.user = {
             name: user.displayName || (user.email ? user.email.split('@')[0] : 'Użytkownik'),
             email: user.email || '',
-            photoURL: user.photoURL || null,
+            photoURL: photoURL,
             uid: user.uid
         };
         loadFavoritesFromFirebase();
@@ -1600,6 +2042,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initSearchAndFilter();
     initChartPeriodButtons();
+    initDarkMode();
     checkOnlineStatus();
     loadDashboardData();
     
