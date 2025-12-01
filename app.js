@@ -1375,31 +1375,47 @@ async function handleChangeEmail(event) {
     const password = document.getElementById('confirmPassword').value;
     const user = auth.currentUser;
 
+    if (!user) {
+        showToast('Musisz być zalogowany, aby zmienić email', 'error');
+        return;
+    }
+
     try {
-        // Re-authenticate user
-        const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        const credential = firebase.auth.EmailAuthProvider.credential(
+            user.email,
+            password
+        );
         await user.reauthenticateWithCredential(credential);
+        await user.verifyBeforeUpdateEmail(newEmail);
 
-        // Update email
-        await user.updateEmail(newEmail);
-
-        AppState.user.email = newEmail;
-        showToast('Email zaktualizowany pomyślnie!', 'success');
+        showToast(
+            'Na nowy adres został wysłany link potwierdzający. Kliknij go, aby dokończyć zmianę emaila.',
+            'success'
+        );
         closeDetailModal();
-        renderProfile();
+
     } catch (error) {
         console.error('Error changing email:', error);
-        let errorMsg = 'Błąd zmiany email';
+        console.log('error.code:', error.code, 'error.message:', error.message);
+
+        let msg = 'Błąd zmiany email';
+
         if (error.code === 'auth/wrong-password') {
-            errorMsg = 'Nieprawidłowe hasło';
+            msg = 'Nieprawidłowe hasło';
         } else if (error.code === 'auth/email-already-in-use') {
-            errorMsg = 'Ten email jest już używany';
+            msg = 'Ten email jest już używany';
         } else if (error.code === 'auth/invalid-email') {
-            errorMsg = 'Nieprawidłowy format email';
+            msg = 'Nieprawidłowy format adresu email';
+        } else if (error.code === 'auth/requires-recent-login') {
+            msg = 'Zaloguj się ponownie i spróbuj jeszcze raz.';
+        } else if (error.code === 'auth/operation-not-allowed') {
+            msg = 'Zmiana emaila wymaga potwierdzenia nowego adresu. Sprawdź swoją skrzynkę.';
         }
-        showToast(errorMsg, 'error');
+
+        showToast(msg, 'error');
     }
 }
+
 
 // Zmiana hasła
 function showChangePasswordForm() {
