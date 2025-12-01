@@ -1570,7 +1570,42 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// =====================
+// Dark Mode
+// =====================
+function toggleDarkMode() {
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    const icon = themeToggle.querySelector('i');
 
+    body.classList.toggle('dark-mode');
+
+    // Zmień ikonę
+    if (body.classList.contains('dark-mode')) {
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+        localStorage.setItem('darkMode', 'enabled');
+    } else {
+        icon.classList.remove('fa-sun');
+        icon.classList.add('fa-moon');
+        localStorage.setItem('darkMode', 'disabled');
+    }
+}
+
+function initDarkMode() {
+    const darkMode = localStorage.getItem('darkMode');
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    const icon = themeToggle?.querySelector('i');
+
+    if (darkMode === 'enabled') {
+        body.classList.add('dark-mode');
+        if (icon) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        }
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initiation');
@@ -1600,6 +1635,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initSearchAndFilter();
     initChartPeriodButtons();
+    initDarkMode();
     checkOnlineStatus();
     loadDashboardData();
     
