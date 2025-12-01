@@ -116,7 +116,6 @@ body {
 
 .header-content {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 2rem;
 }
@@ -173,6 +172,7 @@ body {
 .nav {
     display: flex;
     gap: 0.5rem;
+    margin-left: auto;
 }
 
 .nav-btn {
