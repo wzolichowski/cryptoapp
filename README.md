@@ -43,7 +43,8 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 - ✅ **Frontend** – HTML, CSS, JavaScript 
 - ✅ **Backend** – Firebase   
 - ✅ **Baza danych** – Firestore NoSQL 
-- ✅ **API NBP** – pobieranie danych o kursach walut FIAT  
+- ✅ **API NBP** – pobieranie danych o kursach walut FIAT
+- ✅ **COINGECKO API** - pobieranie danych o krypto 
 - ✅ **Logowanie i rejestracja** użytkowników  
 - ✅ **Autoryzacja** i obsługa sesji  
 - ✅ **Filtrowanie danych** po walucie i zakresie dat  
@@ -51,7 +52,7 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 - ✅ **Ulubione waluty** (dodawanie/usuwanie)  
 - ✅ **Eksport danych** do CSV/XLSX  
 - ✅ **Tryb jasny/ciemny**  
-- ✅ **Obsługa PWA (offline)**  
+- ✅ **Obsługa PWA**  
 - ✅ **Responsywny interfejs (RWD)**  
 
 ### 🚧 Wersja docelowa
@@ -70,17 +71,17 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 | **Oliwia Charyk**        | Project Manager – koordynacja, raportowanie, komunikacja |
 | **Karolina Sosińska**    | Tester QA – testy manualne, automatyczne (pytest, Selenium), PWA |
 | **Tomasz Wojtuń**        | Backend Developer – Flask, logowanie, baza danych, CoinGecko |
-| **Wojciech Zolichowski** | Frontend Developer, API, Azure 
+| **Wojciech Zolichowski** | Frontend Developer, konfiguracja API, Azure 
 
 ---
 
 ## 🧠 Architektura systemu
 
 Trójwarstwowa architektura aplikacji:
-1. **Frontend** – prezentacja danych (HTML/CSS/JS, Bootstrap)
-2. **Backend** – Firebase <3 
+1. **Frontend** – prezentacja danych (HTML/CSS/JS)
+2. **Backend** – Firebase 
 3. **Baza danych + API zewnętrzne** – Firestore NoSql  + API NBP / CoinGecko  
 4. **Autoryzacja użytkowników** – Firebase  
-5. **Środowisko wdrożeniowe** – AZURE/AWS 
+5. **Środowisko wdrożeniowe** – AZURE
 
 
