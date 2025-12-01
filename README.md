@@ -11,10 +11,8 @@ TODO : ( jak pomysly macie )
 BUGI : ( zglaszajcie jak sa )
 
 
-BACKLOGI: ( nowa funkcjonalnosc - ktora uwazacie ze powinna sie znalezc w aplikacji )
-
-
-
+FEATURES :
+- Tryb ciemny / jasny
 
 
 
@@ -31,8 +29,8 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 - zapewnia szybki dostęp do aktualnych i historycznych danych,
 - umożliwia filtrowanie wyników po dacie i walucie,
 - prezentuje trendy kursowe w formie wykresów,
-- pozwala eksportować dane do plików CSV/XLSX, < ---- nie pamietam tego 
-- wspiera logowanie, autoryzację i personalizację danych,
+- pozwala eksportować dane do plików CSV/XLSX
+- wspiera logowanie, autoryzację
 - działa w trybie offline jako aplikacja PWA.
 
 ---
