@@ -845,14 +845,11 @@ function renderProfile() {
     if (AppState.user) {
         profileContent.innerHTML = `
             <div class="user-profile">
-                <div class="user-avatar" style="position: relative;">
+                <div class="user-avatar">
                     ${AppState.user.photoURL ?
                         `<img src="${AppState.user.photoURL}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` :
                         `<i class="fas fa-user"></i>`
                     }
-                    <button class="avatar-edit-btn" onclick="changeProfilePhoto()" title="Zmień zdjęcie">
-                        <i class="fas fa-camera"></i>
-                    </button>
                 </div>
                 <h2>${AppState.user.name}</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 2rem;">${AppState.user.email}</p>
@@ -881,6 +878,17 @@ function renderProfile() {
                             <div class="setting-content">
                                 <div class="setting-title">Zmień hasło</div>
                                 <div class="setting-desc">Zaktualizuj swoje hasło</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+
+                        <button class="setting-item" onclick="changeProfilePhoto()">
+                            <div class="setting-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-title">Zmień zdjęcie</div>
+                                <div class="setting-desc">Zaktualizuj swoje zdjęcie profilowe</div>
                             </div>
                             <i class="fas fa-chevron-right"></i>
                         </button>
@@ -1241,20 +1249,26 @@ function changeProfilePhoto() {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Sprawdź rozmiar (max 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            showToast('Plik jest za duży! Maksymalny rozmiar to 2MB', 'error');
+        // Sprawdź rozmiar (max 500KB dla base64)
+        if (file.size > 500 * 1024) {
+            showToast('Plik jest za duży! Maksymalny rozmiar to 500KB', 'error');
             return;
         }
 
-        // Konwertuj do base64 i zapisz w Firebase Storage lub jako URL
+        // Konwertuj do base64 i zapisz w Firestore (Firebase Auth photoURL ma limit długości)
         const reader = new FileReader();
         reader.onload = async (event) => {
             const photoURL = event.target.result;
 
             try {
                 const user = auth.currentUser;
-                await user.updateProfile({ photoURL: photoURL });
+
+                // Zapisz w Firestore zamiast Firebase Auth (base64 za długie dla photoURL)
+                await db.collection('users').doc(user.uid).set({
+                    photoURL: photoURL,
+                    email: user.email,
+                    displayName: user.displayName
+                }, { merge: true });
 
                 AppState.user.photoURL = photoURL;
                 showToast('Zdjęcie profilowe zaktualizowane!', 'success');
@@ -1944,12 +1958,23 @@ function initDarkMode() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initiation');
 
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(async (user) => {
     if (user) {
+        // Wczytaj photoURL z Firestore (base64 zapisane tam zamiast w Auth)
+        let photoURL = user.photoURL || null;
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists && userDoc.data().photoURL) {
+                photoURL = userDoc.data().photoURL;
+            }
+        } catch (error) {
+            console.error('Error loading photo from Firestore:', error);
+        }
+
         AppState.user = {
             name: user.displayName || (user.email ? user.email.split('@')[0] : 'Użytkownik'),
             email: user.email || '',
-            photoURL: user.photoURL || null,
+            photoURL: photoURL,
             uid: user.uid
         };
         loadFavoritesFromFirebase();
