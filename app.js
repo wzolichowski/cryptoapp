@@ -1277,30 +1277,37 @@ function showChangeEmailForm() {
 
     modalName.textContent = 'Zmień adres email';
     modalBody.innerHTML = `
-        <form onsubmit="handleChangeEmail(event)" style="width: 100%; max-width: 500px; margin: 0 auto;">
-            <div class="form-group">
-                <label for="newEmail">
+        <div style="width: 100%; max-width: 400px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
                     <i class="fas fa-envelope"></i>
-                    Nowy adres email
-                </label>
-                <input type="email" id="newEmail" required placeholder="nowy@email.com">
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Wprowadź nowy adres email i potwierdź zmianę swoim aktualnym hasłem</p>
             </div>
-            <div class="form-group">
-                <label for="confirmPassword">
-                    <i class="fas fa-lock"></i>
-                    Potwierdź hasłem
-                </label>
-                <input type="password" id="confirmPassword" required placeholder="Twoje aktualne hasło">
-            </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button type="button" class="btn btn-secondary" onclick="closeDetailModal()" style="flex: 1;">
-                    Anuluj
-                </button>
-                <button type="submit" class="btn btn-primary" style="flex: 1;">
+            <form onsubmit="handleChangeEmail(event)">
+                <div class="form-group">
+                    <label for="newEmail">
+                        <i class="fas fa-envelope"></i>
+                        Nowy adres email
+                    </label>
+                    <input type="email" id="newEmail" required placeholder="nowy@email.com" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">
+                        <i class="fas fa-lock"></i>
+                        Aktualne hasło
+                    </label>
+                    <input type="password" id="confirmPassword" required placeholder="Wprowadź hasło">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" style="margin-top: 1.5rem;">
+                    <i class="fas fa-check"></i>
                     Zmień email
                 </button>
-            </div>
-        </form>
+                <button type="button" class="btn btn-secondary btn-full" onclick="closeDetailModal()" style="margin-top: 0.75rem;">
+                    Anuluj
+                </button>
+            </form>
+        </div>
     `;
     modal.style.display = 'flex';
 }
@@ -1346,37 +1353,44 @@ function showChangePasswordForm() {
 
     modalName.textContent = 'Zmień hasło';
     modalBody.innerHTML = `
-        <form onsubmit="handleChangePassword(event)" style="width: 100%; max-width: 500px; margin: 0 auto;">
-            <div class="form-group">
-                <label for="currentPassword">
-                    <i class="fas fa-lock"></i>
-                    Aktualne hasło
-                </label>
-                <input type="password" id="currentPassword" required placeholder="Twoje obecne hasło">
-            </div>
-            <div class="form-group">
-                <label for="newPassword">
+        <div style="width: 100%; max-width: 400px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
                     <i class="fas fa-key"></i>
-                    Nowe hasło
-                </label>
-                <input type="password" id="newPassword" required placeholder="Minimum 6 znaków" minlength="6">
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Zabezpiecz swoje konto nowym hasłem. Minimum 6 znaków.</p>
             </div>
-            <div class="form-group">
-                <label for="confirmNewPassword">
+            <form onsubmit="handleChangePassword(event)">
+                <div class="form-group">
+                    <label for="currentPassword">
+                        <i class="fas fa-lock"></i>
+                        Aktualne hasło
+                    </label>
+                    <input type="password" id="currentPassword" required placeholder="Twoje obecne hasło" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">
+                        <i class="fas fa-key"></i>
+                        Nowe hasło
+                    </label>
+                    <input type="password" id="newPassword" required placeholder="Minimum 6 znaków" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword">
+                        <i class="fas fa-check"></i>
+                        Potwierdź nowe hasło
+                    </label>
+                    <input type="password" id="confirmNewPassword" required placeholder="Powtórz nowe hasło">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" style="margin-top: 1.5rem;">
                     <i class="fas fa-check"></i>
-                    Potwierdź nowe hasło
-                </label>
-                <input type="password" id="confirmNewPassword" required placeholder="Powtórz nowe hasło">
-            </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button type="button" class="btn btn-secondary" onclick="closeDetailModal()" style="flex: 1;">
-                    Anuluj
-                </button>
-                <button type="submit" class="btn btn-primary" style="flex: 1;">
                     Zmień hasło
                 </button>
-            </div>
-        </form>
+                <button type="button" class="btn btn-secondary btn-full" onclick="closeDetailModal()" style="margin-top: 0.75rem;">
+                    Anuluj
+                </button>
+            </form>
+        </div>
     `;
     modal.style.display = 'flex';
 }
@@ -1425,30 +1439,31 @@ function confirmDeleteAccount() {
 
     modalName.textContent = 'Usuń konto';
     modalBody.innerHTML = `
-        <div style="width: 100%; max-width: 500px; margin: 0 auto; text-align: center;">
-            <div style="color: var(--danger); font-size: 4rem; margin-bottom: 1rem;">
-                <i class="fas fa-exclamation-triangle"></i>
+        <div style="width: 100%; max-width: 400px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 style="color: var(--danger); margin-bottom: 1rem; font-size: 1.5rem;">Czy na pewno?</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                    Ta operacja jest <strong>nieodwracalna</strong>. Twoje konto i wszystkie dane zostaną trwale usunięte.
+                </p>
             </div>
-            <h3 style="color: var(--danger); margin-bottom: 1rem;">Czy na pewno?</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 2rem;">
-                Ta operacja jest nieodwracalna. Twoje konto i wszystkie dane zostaną trwale usunięte.
-            </p>
             <form onsubmit="handleDeleteAccount(event)">
-                <div class="form-group" style="text-align: left;">
+                <div class="form-group">
                     <label for="deletePassword">
                         <i class="fas fa-lock"></i>
                         Potwierdź hasłem
                     </label>
-                    <input type="password" id="deletePassword" required placeholder="Wprowadź swoje hasło">
+                    <input type="password" id="deletePassword" required placeholder="Wprowadź swoje hasło" autofocus>
                 </div>
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeDetailModal()" style="flex: 1;">
-                        Anuluj
-                    </button>
-                    <button type="submit" class="btn" style="flex: 1; background: var(--danger); color: white;">
-                        Usuń konto
-                    </button>
-                </div>
+                <button type="submit" class="btn btn-full" style="margin-top: 1.5rem; background: var(--danger); color: white;">
+                    <i class="fas fa-trash-alt"></i>
+                    Usuń moje konto
+                </button>
+                <button type="button" class="btn btn-secondary btn-full" onclick="closeDetailModal()" style="margin-top: 0.75rem;">
+                    Anuluj
+                </button>
             </form>
         </div>
     `;
