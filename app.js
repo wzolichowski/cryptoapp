@@ -1832,7 +1832,6 @@ window.addEventListener('keydown', (e) => {
 
 function initSearchAndFilter() {
     const searchInput = document.getElementById('searchInput');
-    const baseCurrencySelect = document.getElementById('baseCurrency');
     const refreshBtn = document.getElementById('refreshBtn');
     const exportBtn = document.getElementById('exportBtn');
 
@@ -1846,11 +1845,6 @@ function initSearchAndFilter() {
 
     cryptoSearchInput?.addEventListener('input', (e) => {
         filterCryptos(e.target.value);
-    });
-
-    baseCurrencySelect?.addEventListener('change', (e) => {
-        AppState.baseCurrency = e.target.value;
-        loadDashboardData();
     });
 
     refreshBtn?.addEventListener('click', () => {
