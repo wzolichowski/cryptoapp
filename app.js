@@ -1249,38 +1249,76 @@ function changeProfilePhoto() {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Sprawdź rozmiar (max 500KB dla base64)
-        if (file.size > 500 * 1024) {
-            showToast('Plik jest za duży! Maksymalny rozmiar to 500KB', 'error');
+        // Sprawdź rozmiar (max 5MB - zostanie skompresowany)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Plik jest za duży! Maksymalny rozmiar to 5MB', 'error');
             return;
         }
 
-        // Konwertuj do base64 i zapisz w Firestore (Firebase Auth photoURL ma limit długości)
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            const photoURL = event.target.result;
+        try {
+            // Kompresuj obraz przed zapisem
+            const compressedBase64 = await compressImage(file, 800, 800, 0.8);
 
-            try {
-                const user = auth.currentUser;
+            const user = auth.currentUser;
 
-                // Zapisz w Firestore zamiast Firebase Auth (base64 za długie dla photoURL)
-                await db.collection('users').doc(user.uid).set({
-                    photoURL: photoURL,
-                    email: user.email,
-                    displayName: user.displayName
-                }, { merge: true });
+            // Zapisz w Firestore (base64 skompresowanego obrazu)
+            await db.collection('users').doc(user.uid).set({
+                photoURL: compressedBase64,
+                email: user.email,
+                displayName: user.displayName
+            }, { merge: true });
 
-                AppState.user.photoURL = photoURL;
-                showToast('Zdjęcie profilowe zaktualizowane!', 'success');
-                renderProfile();
-            } catch (error) {
-                console.error('Error updating photo:', error);
-                showToast('Błąd aktualizacji zdjęcia: ' + error.message, 'error');
-            }
-        };
-        reader.readAsDataURL(file);
+            AppState.user.photoURL = compressedBase64;
+            showToast('Zdjęcie profilowe zaktualizowane!', 'success');
+            renderProfile();
+        } catch (error) {
+            console.error('Error updating photo:', error);
+            showToast('Błąd aktualizacji zdjęcia: ' + error.message, 'error');
+        }
     };
     input.click();
+}
+
+// Funkcja kompresji obrazu
+function compressImage(file, maxWidth, maxHeight, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                // Oblicz nowe wymiary zachowując proporcje
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = height * (maxWidth / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = width * (maxHeight / height);
+                        height = maxHeight;
+                    }
+                }
+
+                // Utwórz canvas i narysuj przeskalowany obraz
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Konwertuj do base64 z kompresją
+                const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                resolve(compressedBase64);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 // Zmiana email
