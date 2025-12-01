@@ -1213,7 +1213,8 @@ async function fetchCryptoHistoricalData(cryptoId, days) {
 async function fetchCurrencyHistoricalData(currencyCode, days) {
     try {
         // NBP API ma limit 255 dni dla /last/{n}
-        const nbpDays = Math.min(days, 255);
+        // Dla 24h (days=1) pobieramy ostatnie 7 dni, żeby mieć wystarczająco punktów
+        const nbpDays = days === 1 ? 7 : Math.min(days, 255);
         const url = `https://api.nbp.pl/api/exchangerates/rates/A/${currencyCode}/last/${nbpDays}/?format=json`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('NBP API error');
