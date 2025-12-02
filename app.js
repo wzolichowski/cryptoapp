@@ -1070,9 +1070,6 @@ function showRegisterForm() {
                     Zarejestruj się
                 </button>
             </form>
-            <div class="form-footer">
-                <p>Masz już konto? <a href="#" onclick="event.preventDefault(); showLoginForm()">Zaloguj się</a></p>
-            </div>
             <button class="btn btn-text" onclick="renderProfile()">
                 <i class="fas fa-arrow-left"></i>
                 Powrót do opcji logowania
