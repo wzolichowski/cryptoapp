@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Tło -->
+  <rect width="128" height="128" rx="24" fill="url(#grad)"/>
+
+  <!-- Wykres (linia trendu) -->
+  <path d="M 20 90 L 35 75 L 50 80 L 65 60 L 80 65 L 95 45 L 108 50"
+        stroke="white"
+        stroke-width="5"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.9"/>
+
+  <!-- Punkty na wykresie -->
+  <circle cx="20" cy="90" r="4" fill="white" opacity="0.8"/>
+  <circle cx="35" cy="75" r="4" fill="white" opacity="0.8"/>
+  <circle cx="50" cy="80" r="4" fill="white" opacity="0.8"/>
+  <circle cx="65" cy="60" r="4" fill="white" opacity="0.8"/>
+  <circle cx="80" cy="65" r="4" fill="white" opacity="0.8"/>
+  <circle cx="95" cy="45" r="4" fill="white" opacity="0.8"/>
+  <circle cx="108" cy="50" r="4" fill="white" opacity="0.8"/>
+
+  <!-- Symbol waluty (zł) w rogу -->
+  <text x="95" y="110"
+        font-family="Arial, sans-serif"
+        font-size="32"
+        font-weight="bold"
+        fill="white"
+        opacity="0.9">zł</text>
+</svg>
