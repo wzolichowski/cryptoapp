@@ -915,9 +915,8 @@ function renderProfile() {
                         <i class="fas fa-chart-line"></i>
                     </div>
                     <h2>Witaj w Kursy Walut</h2>
-                    <p>Zaloguj się, aby śledzić swoje ulubione waluty i kryptowaluty</p>
                 </div>
-                
+
                 <div class="auth-buttons" id="authButtons">
                     <button class="btn btn-google" onclick="handleGoogleLogin()">
                         <svg width="20" height="20" viewBox="0 0 24 24">
