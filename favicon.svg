@@ -26,12 +26,4 @@
   <circle cx="80" cy="65" r="4" fill="white" opacity="0.8"/>
   <circle cx="95" cy="45" r="4" fill="white" opacity="0.8"/>
   <circle cx="108" cy="50" r="4" fill="white" opacity="0.8"/>
-
-  <!-- Symbol waluty (zł) w rogу -->
-  <text x="95" y="110"
-        font-family="Arial, sans-serif"
-        font-size="32"
-        font-weight="bold"
-        fill="white"
-        opacity="0.9">zł</text>
 </svg>
