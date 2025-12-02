@@ -970,9 +970,11 @@ function handleGoogleLogin() {
 function showLoginForm() {
     const container = document.getElementById('authFormContainer');
     const buttons = document.getElementById('authButtons');
-    
+    const welcome = document.querySelector('.auth-welcome');
+
     buttons.style.display = 'none';
-    
+    if (welcome) welcome.style.display = 'none';
+
     container.innerHTML = `
         <div class="login-form">
             <div class="form-header">
@@ -1020,9 +1022,11 @@ function showLoginForm() {
 function showRegisterForm() {
     const container = document.getElementById('authFormContainer');
     const buttons = document.getElementById('authButtons');
-    
+    const welcome = document.querySelector('.auth-welcome');
+
     buttons.style.display = 'none';
-    
+    if (welcome) welcome.style.display = 'none';
+
     container.innerHTML = `
         <div class="login-form">
             <div class="form-header">
@@ -1080,9 +1084,11 @@ function showRegisterForm() {
 function showForgotPasswordForm() {
     const container = document.getElementById('authFormContainer');
     const buttons = document.getElementById('authButtons');
-    
+    const welcome = document.querySelector('.auth-welcome');
+
     buttons.style.display = 'none';
-    
+    if (welcome) welcome.style.display = 'none';
+
     container.innerHTML = `
         <div class="login-form">
             <div class="form-header">
