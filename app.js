@@ -917,7 +917,7 @@ function renderProfile() {
                     <h2>Witaj w Kursy Walut</h2>
                     <p>Zaloguj się, aby śledzić swoje ulubione waluty i kryptowaluty</p>
                 </div>
-                
+
                 <div class="auth-buttons" id="authButtons">
                     <button class="btn btn-google" onclick="handleGoogleLogin()">
                         <svg width="20" height="20" viewBox="0 0 24 24">
@@ -971,9 +971,11 @@ function handleGoogleLogin() {
 function showLoginForm() {
     const container = document.getElementById('authFormContainer');
     const buttons = document.getElementById('authButtons');
-    
+    const welcome = document.querySelector('.auth-welcome');
+
     buttons.style.display = 'none';
-    
+    if (welcome) welcome.style.display = 'none';
+
     container.innerHTML = `
         <div class="login-form">
             <div class="form-header">
@@ -1021,9 +1023,11 @@ function showLoginForm() {
 function showRegisterForm() {
     const container = document.getElementById('authFormContainer');
     const buttons = document.getElementById('authButtons');
-    
+    const welcome = document.querySelector('.auth-welcome');
+
     buttons.style.display = 'none';
-    
+    if (welcome) welcome.style.display = 'none';
+
     container.innerHTML = `
         <div class="login-form">
             <div class="form-header">
@@ -1070,9 +1074,6 @@ function showRegisterForm() {
                     Zarejestruj się
                 </button>
             </form>
-            <div class="form-footer">
-                <p>Masz już konto? <a href="#" onclick="event.preventDefault(); showLoginForm()">Zaloguj się</a></p>
-            </div>
             <button class="btn btn-text" onclick="renderProfile()">
                 <i class="fas fa-arrow-left"></i>
                 Powrót do opcji logowania
@@ -1084,9 +1085,11 @@ function showRegisterForm() {
 function showForgotPasswordForm() {
     const container = document.getElementById('authFormContainer');
     const buttons = document.getElementById('authButtons');
-    
+    const welcome = document.querySelector('.auth-welcome');
+
     buttons.style.display = 'none';
-    
+    if (welcome) welcome.style.display = 'none';
+
     container.innerHTML = `
         <div class="login-form">
             <div class="form-header">
