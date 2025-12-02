@@ -803,6 +803,7 @@ body.dark-mode .btn-google:hover {
     font-size: 1rem;
     transition: var(--transition);
     background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .form-group input:focus {
