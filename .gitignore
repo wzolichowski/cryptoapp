@@ -3,7 +3,7 @@ venv/
 __pycache__/
 .pytest_cache/
 downloads/
-*raport*.html     <-- ZMIANA
+*raport.html 
 *.log
 .vscode/
 offline_error.png
