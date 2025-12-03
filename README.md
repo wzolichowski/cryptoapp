@@ -42,10 +42,6 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 - ✅ **Obsługa PWA**  
 - ✅ **Responsywny interfejs (RWD)**
 
-### 🚧 Wersja docelowa
-- 🔔 Powiadomienia push / alerty walutowe  
-- 🧠 Udoskonalony UX/UI i testy automatyczne  ( czy przy html css js mozna nazwac udoskonalonym? )
-
 ---
 
 ## 👥 Zespół projektowy
@@ -63,9 +59,9 @@ Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów 
 ## 🧠 Architektura systemu
 
 Trójwarstwowa architektura aplikacji:
-1. **Frontend** – prezentacja danych (HTML/CSS/JS)
+1. **Frontend** –  HTML/CSS/JS
 2. **Backend** – Firebase 
-3. **Baza danych + API zewnętrzne** – Firestore NoSql  + API NBP / CoinGecko  
+3. **Baza danych + API zewnętrzne** – Firestore NoSql  + API NBP & CoinGecko  
 4. **Autoryzacja użytkowników** – Firebase  
 5. **Środowisko wdrożeniowe** – AZURE
 
