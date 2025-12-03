@@ -63,6 +63,6 @@ Trójwarstwowa architektura aplikacji:
 2. **Backend** – Firebase 
 3. **Baza danych + API zewnętrzne** – Firestore NoSql  + API NBP & CoinGecko  
 4. **Autoryzacja użytkowników** – Firebase  
-5. **Środowisko wdrożeniowe** – AZURE
+5. **Środowisko wdrożeniowe** – Azure Static Web Apps
 
 
