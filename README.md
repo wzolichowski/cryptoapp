@@ -1,15 +1,6 @@
-TODO : ( jak pomysly macie )
-- favicon
-- zmiana avatara ?  czy wywalamy? 
-- wiecej opcji w profilu 
+TODO : 
+- favicony - generacja - podmiana nazwy na uzyte w index, wrzucenie do assets/favicons
 
-- zmiana czcionki w trybie ciemnym z czarnego na jaśniejszy (okno rejestracja konta)
-
-
-BUGI : ( zglaszajcie jak sa )
-
-
-FEATURES :
 
 
 
