@@ -14,16 +14,12 @@ const AppState = {
 
 
 // === Firebase config & init ===
-const firebaseConfig = {
-  apiKey: "AIzaSyDcyf2rY050dlVSS6HjTbCjFGraZatPGRY",
-  authDomain: "financial-crypto-dashboard.firebaseapp.com",
-  projectId: "financial-crypto-dashboard",
-  storageBucket: "financial-crypto-dashboard.firebasestorage.app",
-  messagingSenderId: "501318964054",
-  appId: "1:501318964054:web:8a193984a849e242c13cf7",
-  measurementId: "G-J10MWNK82T"
-};
+// Konfiguracja Firebase jest ładowana z firebase-config.js
+// (generowany podczas deployment z GitHub Secrets)
 
+if (typeof firebaseConfig === 'undefined') {
+    console.error('Firebase configuration not loaded! Make sure firebase-config.js is properly deployed.');
+}
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
