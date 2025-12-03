@@ -65,26 +65,3 @@ Trójwarstwowa architektura aplikacji:
 4. **Autoryzacja użytkowników** – Firebase
 5. **Środowisko wdrożeniowe** – Azure Static Web Apps
 
----
-
-## 🔐 Konfiguracja Firebase Secrets
-
-Aplikacja używa GitHub Secrets do bezpiecznego przechowywania konfiguracji Firebase.
-
-**📖 Szczegółowa instrukcja:** Zobacz plik [`FIREBASE_SECRETS_SETUP.md`](./FIREBASE_SECRETS_SETUP.md)
-
-### Krótka instrukcja:
-
-1. Przejdź do **Settings** → **Secrets and variables** → **Actions** w repozytorium GitHub
-2. Dodaj następujące secrets (wartości z Twojego projektu Firebase):
-   - `FIREBASE_API_KEY`
-   - `FIREBASE_AUTH_DOMAIN`
-   - `FIREBASE_PROJECT_ID`
-   - `FIREBASE_STORAGE_BUCKET`
-   - `FIREBASE_MESSAGING_SENDER_ID`
-   - `FIREBASE_APP_ID`
-   - `FIREBASE_MEASUREMENT_ID`
-
-Podczas deployment, GitHub Actions automatycznie wygeneruje plik `firebase-config.js` z tych wartości.
-
-
