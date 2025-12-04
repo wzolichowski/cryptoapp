@@ -10,7 +10,7 @@ Interaktywna aplikacja **Progressive Web App (PWA)** umożliwiająca przeglądan
 Projekt został zrealizowany w ramach zespołowego projektu studenckiego.
 
 ---
-
+  
 ## 🎯 Cel projektu
 
 Celem aplikacji jest stworzenie **intuicyjnego narzędzia do śledzenia kursów walut FIAT i kryptowalut**, które:
